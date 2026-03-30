@@ -43,6 +43,11 @@
             load() {
                 const saved = localStorage.getItem('obvious_soweto_run_data');
                 this.data = saved ? { ...this.defaultData, ...JSON.parse(saved) } : { ...this.defaultData };
+                // Ensure all standard characters are unlocked regardless of saved data
+                const essentials = ['base', 'player_2', 'player_3'];
+                essentials.forEach(sk => {
+                    if (!this.data.unlockedSkins.includes(sk)) this.data.unlockedSkins.push(sk);
+                });
             }
             save() { localStorage.setItem('obvious_soweto_run_data', JSON.stringify(this.data)); }
             updateScore(score) {
@@ -57,19 +62,7 @@
             setActiveSkin(skinKey) {
                 if (this.data.unlockedSkins.includes(skinKey)) { this.data.activeSkin = skinKey; this.save(); }
             }
-            redeemCode(code) {
-                const codes = {
-                    'OBVIOUS26': { type: 'skin', value: 'gold_hustle', name: 'Gold Hustle Fit' },
-                    'KASIKING': { type: 'skin', value: 'kasi_king', name: 'Kasi King Jacket' },
-                    'SOWETO': { type: 'coins', value: 500, name: '500 Obvious Coins' }
-                };
-                const reward = codes[code.toUpperCase()];
-                if (reward) {
-                    if (reward.type === 'skin') return this.unlockSkin(reward.value) ? `Unlocked: ${reward.name}!` : `You already own ${reward.name}.`;
-                    if (reward.type === 'coins') { this.addCoins(reward.value); return `Added: ${reward.name}!`; }
-                }
-                return "Invalid or Expired Code.";
-            }
+            redeemCode(code) { return "Merch System is currently offline."; }
         }
         const gameData = new DataHandler();
 
@@ -203,8 +196,7 @@
                 this.add.text(width / 2, height * 0.38, `HIGH SCORE: ${gameData.data.highScore}`, { font: '24px Impact', fill: '#aaa' }).setOrigin(0.5);
                 this.add.text(width / 2, height * 0.43, `COINS: ${gameData.data.coins}`, { font: '24px Impact', fill: '#ffcc00' }).setOrigin(0.5);
 
-                this.createBtn(width / 2, height * 0.58, 'TAP TO SKATE', 0xff3366, () => this.scene.start('GameScene'));
-                this.createBtn(width / 2, height * 0.70, 'MERCH CODES', 0x222222, () => this.promptCode());
+                this.createBtn(width / 2, height * 0.65, 'TAP TO SKATE', 0xff3366, () => this.scene.start('GameScene'));
                 this.createBtn(width / 2, height * 0.80, 'CHANGE DRIP', 0x222222, () => this.scene.start('SkinScene'));
                 this.add.text(width / 2, height * 0.95, '© OVIAAS STUDIOS', { font: '14px Arial', fill: '#555' }).setOrigin(0.5);
             }
@@ -240,7 +232,7 @@
                     const isUnlocked = gameData.data.unlockedSkins.includes(skin.key);
                     const isActive = gameData.data.activeSkin === skin.key;
                     const card = this.add.container(width / 2, startY);
-                    const bg = this.add.rectangle(0, 0, 300, 100, isActive ? 0xff3366 : (isUnlocked ? 0x333333 : 0x1a1a1a)).setInteractive({ useHandCursor: isUnlocked });
+                    const bg = this.add.rectangle(0, 0, 300, 100, isActive ? 0xff3366 : 0x333333).setInteractive({ useHandCursor: true });
                     if (isActive) bg.setStrokeStyle(4, 0xffffff);
 
                     const sprite = this.add.sprite(-100, 0, skin.tex).setScale(0.8);
@@ -248,10 +240,9 @@
                     // If the skin is unlocked, play the animation on the selection screen!
                     if (isUnlocked) sprite.play(`skate_${skin.key}`);
 
-                    const txtColor = isUnlocked ? '#ffffff' : '#555555';
-                    card.add([bg, sprite, this.add.text(-40, -15, skin.name, { font: '24px Impact', fill: txtColor }), this.add.text(-40, 15, isActive ? 'EQUIPPED' : (isUnlocked ? 'TAP TO EQUIP' : 'LOCKED'), { font: '14px Arial', fill: isActive ? '#fff' : '#888' })]);
+                    card.add([bg, sprite, this.add.text(-40, -15, skin.name, { font: '24px Impact', fill: '#ffffff' }), this.add.text(-40, 15, isActive ? 'EQUIPPED' : 'TAP TO EQUIP', { font: '14px Arial', fill: isActive ? '#fff' : '#888' })]);
 
-                    if (isUnlocked) bg.on('pointerdown', () => { gameData.setActiveSkin(skin.key); this.scene.restart(); });
+                    bg.on('pointerdown', () => { gameData.setActiveSkin(skin.key); this.scene.restart(); });
                     startY += 120;
                 });
 
