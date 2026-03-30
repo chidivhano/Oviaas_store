@@ -276,7 +276,7 @@
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
                 // Make character smaller
-                this.player.setScale(0.08);
+                this.player.setScale(0.10);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
@@ -291,7 +291,7 @@
                 this.obstacleTimer = this.time.addEvent({ delay: 1500, callback: this.spawnObstacle, callbackScope: this, loop: true });
                 this.collectibleTimer = this.time.addEvent({ delay: 2000, callback: this.spawnCollectible, callbackScope: this, loop: true });
                 this.speedTimer = this.time.addEvent({ delay: 10000, callback: () => { this.gameSpeed += 0.5; }, loop: true });
-                this.particles = this.add.particles(0, 0, 'logo', { speed: 100, scale: { start: 0.5, end: 0 }, alpha: { start: 1, end: 0 }, lifespan: 500, emitting: false }).setDepth(20);
+                this.particles = this.add.particles(0, 0, 'col_logo', { speed: 100, scale: { start: 0.5, end: 0 }, alpha: { start: 1, end: 0 }, lifespan: 500, emitting: false }).setDepth(20);
             }
 
             update(time, delta) {
@@ -378,7 +378,7 @@
                     tex = 'pothole'; // Reverting to generated texture for missing assets
                     isLow = true;
                 }
-                const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex).setScale(0.7);
+                const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex).setScale(0.35);
                 obs.typeData = { tex, isHigh, isLow };
             }
             spawnCollectible() {
@@ -398,7 +398,7 @@
                 this.gameOver();
             }
             collectItem(player, item) {
-                if (item.itemType === 'logo') { gameData.addCoins(5); this.ui.showFloatingText('+5 COINS', item.x, item.y, '#ffcc00'); this.particles.emitParticleAt(item.x, item.y, 10); }
+                if (item.itemType === 'col_logo') { gameData.addCoins(5); this.ui.showFloatingText('+5 COINS', item.x, item.y, '#ffcc00'); this.particles.emitParticleAt(item.x, item.y, 10); }
                 else { this.score += 50; this.ui.showFloatingText('+50', item.x, item.y, '#00ffcc'); }
                 item.destroy();
             }

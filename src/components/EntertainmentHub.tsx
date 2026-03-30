@@ -15,11 +15,11 @@ const content = {
     { id: 3, title: 'Cyberpunk 2077 x Oviaas', duration: '05:15', image: 'https://picsum.photos/seed/movie_cyber/800/450' },
   ],
   games: [
-    { id: 1, title: 'Soweto Run Oviaas', genre: 'Endless Runner', image: `${import.meta.env.BASE_URL}gusheshe.png`, gamePath: `${import.meta.env.BASE_URL}Soweto_Run_Oviaas/index.html` },
-    { id: 2, title: 'Neon Character', genre: 'Action', image: `${import.meta.env.BASE_URL}charecter.png` },
-    { id: 3, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}Oviaas_Coin.png` },
-    { id: 4, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}gusheshe_2.png` },
-    { id: 5, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}charecter_2.png` },
+    { id: 1, title: 'Soweto Run Oviaas', genre: 'Endless Runner', image: `${import.meta.env.BASE_URL}assets/gusheshe.png`, gamePath: `${import.meta.env.BASE_URL}Soweto_Run_Oviaas/index.html` },
+    { id: 2, title: 'Neon Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter.png` },
+    { id: 3, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}assets/Oviaas_Coin.png` },
+    { id: 4, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}assets/gusheshe_2.png` },
+    { id: 5, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter_2.png` },
   ],
   music: [
     { id: 1, title: 'Oviaas Vol. 1', artist: 'Various Artists', image: 'https://picsum.photos/seed/music_vol1/500/500' },
