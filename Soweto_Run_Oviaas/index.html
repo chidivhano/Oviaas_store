@@ -85,6 +85,7 @@
                 this.load.image('player_body', '../assets/charecter_2.png');
                 this.load.image('obs_taxi', '../assets/gusheshe.png');
                 this.load.image('obs_gusheshe_2', '../assets/gusheshe_2.png');
+                this.load.image('obs_pothole', '../assets/pothole.png'); // Add new pothole asset
                 this.load.image('col_coin', '../assets/Oviaas_Coin.png');
                 this.load.image('col_logo', '../assets/Oviaas_Logo.jpeg');
             }
@@ -276,12 +277,13 @@
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
                 
-                // Scale player to be large and clear, preserving its natural proportions
-                this.player.displayWidth = 90; // Large visibility to showcase merch
+                // Scale player to be extremely large and clear, showcasing merch
+                // We bump the size significantly so it renders cleanly and doesn't get softened by the browser downscaling
+                this.player.displayWidth = 135; 
                 this.player.scaleY = this.player.scaleX; // Lock aspect ratio so it doesn't look squished/blurry
                 
-                // Keep the physics body tighter than the image itself to allow near-misses
-                this.player.body.setSize(this.player.width * 0.6, this.player.height * 0.8);
+                // Keep the physics body tight to the center so standard gameplay isn't broken by a huge visual sprite
+                this.player.body.setSize(this.player.width * 0.4, this.player.height * 0.7);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
@@ -380,7 +382,7 @@
                     tex = 'obs_gusheshe_2'; // High obstacle
                     isHigh = true;
                 } else {
-                    tex = 'pothole'; // Reverting to generated texture for missing assets
+                    tex = 'obs_pothole'; // Reverting to generated texture for missing assets
                     isLow = true;
                 }
                 const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex);
