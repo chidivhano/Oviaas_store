@@ -194,7 +194,7 @@
                 const grid = this.add.grid(width / 2, height / 2, width * 2, height * 2, 60, 60, 0x111111, 1, 0x333333, 0.5);
                 this.tweens.add({ targets: grid, y: height / 2 + 60, duration: 1000, repeat: -1 });
 
-                this.add.text(width / 2, height * 0.10, 'PRESENTED BY OBVIOUS STUDIOS', { font: 'bold 16px Arial', fill: '#ffcc00', letterSpacing: 2 }).setOrigin(0.5);
+                this.add.text(width / 2, height * 0.10, 'PRESENTED BY OVIAAS STUDIOS', { font: 'bold 16px Arial', fill: '#ffcc00', letterSpacing: 2 }).setOrigin(0.5);
                 this.add.text(width / 2, height * 0.17, 'SOWETO', { font: 'bold 64px Impact', fill: '#ff3366' }).setOrigin(0.5).setShadow(3, 3, '#000', 0);
                 this.add.text(width / 2, height * 0.25, 'SKATE', { font: 'bold 80px Impact', fill: '#ffffff' }).setOrigin(0.5).setShadow(4, 4, '#ffcc00', 0);
                 this.add.text(width / 2, height * 0.38, `HIGH SCORE: ${gameData.data.highScore}`, { font: '24px Impact', fill: '#aaa' }).setOrigin(0.5);
@@ -203,7 +203,7 @@
                 this.createBtn(width / 2, height * 0.58, 'TAP TO SKATE', 0xff3366, () => this.scene.start('GameScene'));
                 this.createBtn(width / 2, height * 0.70, 'MERCH CODES', 0x222222, () => this.promptCode());
                 this.createBtn(width / 2, height * 0.80, 'CHANGE DRIP', 0x222222, () => this.scene.start('SkinScene'));
-                this.add.text(width / 2, height * 0.95, '© OBVIOUS STUDIOS', { font: '14px Arial', fill: '#555' }).setOrigin(0.5);
+                this.add.text(width / 2, height * 0.95, '© OVIAAS STUDIOS', { font: '14px Arial', fill: '#555' }).setOrigin(0.5);
             }
             createBtn(x, y, text, color, callback) {
                 const btn = this.add.container(x, y);
@@ -214,7 +214,7 @@
                 bg.on('pointerup', () => { bg.setFillStyle(color); callback(); });
             }
             promptCode() {
-                const code = prompt("Enter your Obvious Studios Smart Merch Code:");
+                const code = prompt("Enter your Oviaas Studios Smart Merch Code:");
                 if (code && code.trim() !== "") { alert(gameData.redeemCode(code.trim())); this.scene.restart(); }
             }
         }
@@ -276,7 +276,7 @@
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
                 // Make character smaller
-                this.player.setScale(0.12);
+                this.player.setScale(0.08);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
@@ -369,14 +369,14 @@
                 if (this.isGameOver) return;
                 const typeRoll = Phaser.Math.Between(1, 100);
                 let tex = 'obs_taxi', isHigh = false, isLow = false;
-                if (typeRoll < 40) { 
-                    tex = 'obs_taxi'; 
-                } else if (typeRoll < 70) { 
+                if (typeRoll < 40) {
+                    tex = 'obs_taxi';
+                } else if (typeRoll < 70) {
                     tex = 'obs_gusheshe_2'; // High obstacle
-                    isHigh = true; 
-                } else { 
+                    isHigh = true;
+                } else {
                     tex = 'pothole'; // Reverting to generated texture for missing assets
-                    isLow = true; 
+                    isLow = true;
                 }
                 const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex).setScale(0.7);
                 obs.typeData = { tex, isHigh, isLow };
