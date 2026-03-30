@@ -400,10 +400,17 @@
                 if (this.isGameOver) return;
                 const tex = 'col_coin'; // Only spawn the Oviaas Coin!
                 const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex);
-                // Force size regardless of source dimensions so large JPEGs don't break the layout
-                item.setDisplaySize(40, 40);
+                
+                // Set appropriate size while retaining circular aspect ratio
+                item.displayWidth = 60;
+                item.scaleY = item.scaleX;
                 item.itemType = tex;
-                this.tweens.add({ targets: item, y: item.y - 10, duration: 500, yoyo: true, repeat: -1 });
+                
+                // Tighten coin hitbox so picking it up feels precise
+                item.body.setSize(item.width * 0.7, item.height * 0.7);
+
+                // Animate scale to make it "pulse" without breaking the falling Y-movement
+                this.tweens.add({ targets: item, scaleX: item.scaleX * 1.2, scaleY: item.scaleY * 1.2, duration: 500, yoyo: true, repeat: -1 });
             }
             moveGroup(group) { group.children.iterate((child) => { if (child) { child.y += this.gameSpeed; if (child.y > this.height + 150) child.destroy(); } }); }
 
