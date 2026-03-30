@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OVS Studios | Kasi Hoops</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ovs: {
+                            sand: '#E6DCC8',
+                            earth: '#A67C52',
+                            clay: '#C25A3C',
+                            olive: '#4A5D23',
+                            charcoal: '#2D2D2A',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #2D2D2A;
+            /* ovs-charcoal */
+            touch-action: none;
+            /* Prevent scrolling on mobile */
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #3a3a36 0%, #1a1a18 100%);
+        }
+
+        canvas {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Custom UI Overlays */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(45, 45, 42, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .btn-ovs {
+            background-color: #C25A3C;
+            color: #E6DCC8;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 1rem 2.5rem;
+            border-radius: 0.5rem;
+            letter-spacing: 0.1em;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-ovs:hover {
+            background-color: #A67C52;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #E6DCC8;
+            border: 2px solid #E6DCC8;
+        }
+
+        .btn-outline:hover {
+            background-color: #E6DCC8;
+            color: #2D2D2A;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud-text {
+            color: #E6DCC8;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #message-area {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 900;
+            color: #C25A3C;
+            text-shadow: 3px 3px 0px #2D2D2A, -1px -1px 0 #E6DCC8;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 6;
+            text-align: center;
+        }
+
+        /* Floating animations */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .brand-text {
+            letter-spacing: 0.2em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+        <!-- Heads Up Display -->
+        <div id="hud" class="hidden">
+            <div class="flex flex-col">
+                <span class="hud-text text-ovs-clay text-sm tracking-widest uppercase">Score</span>
+                <span id="scoreDisplay" class="hud-text text-4xl">0</span>
+                <span id="comboDisplay" class="hud-text text-ovs-earth text-lg mt-1 opacity-0 transition-opacity">Combo
+                    x1</span>
+            </div>
+            <div class="flex flex-col items-end">
+                <span id="modeLabel" class="hud-text text-ovs-clay text-sm tracking-widest uppercase">Time</span>
+                <span id="timeDisplay" class="hud-text text-4xl">60</span>
+            </div>
+        </div>
+
+        <!-- In-Game Messages (Swish, Combo, etc) -->
+        <div id="message-area">SWISH!</div>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="overlay">
+            <div class="text-center mb-8 animate-float">
+                <h2 class="text-ovs-earth font-bold tracking-[0.3em] uppercase text-sm mb-2">Presents</h2>
+                <h1 class="text-6xl md:text-8xl font-black text-ovs-sand mb-2 drop-shadow-lg italic">KASI HOOPS</h1>
+                <p class="text-ovs-clay font-bold tracking-widest uppercase mt-4">By OVS Studios</p>
+            </div>
+
+            <div class="flex flex-col gap-4 w-64">
+                <button class="btn-ovs" onclick="startGame('arcade')">Arcade Mode</button>
+                <button class="btn-ovs" onclick="startGame('time')">60s Attack</button>
+                <button class="btn-ovs btn-outline mt-4" onclick="window.open('#', '_blank')">Shop OVS Apparel</button>
+            </div>
+
+            <div class="absolute bottom-8 text-ovs-sand/50 text-sm tracking-widest uppercase text-center w-full px-4">
+                Drag to aim • Release to shoot • Chase the perfect swish
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over" class="overlay hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-ovs-clay font-black text-6xl mb-2 italic">GAME OVER</h2>
+                <p class="text-ovs-sand text-2xl font-bold mb-6">Final Score: <span id="finalScore"
+                        class="text-ovs-earth text-4xl">0</span></p>
+                <p id="bestScoreMsg" class="text-ovs-olive font-bold text-lg mb-8 tracking-widest"></p>
+            </div>
+
+            <div class="flex flex-col gap-4 w-64">
+                <button class="btn-ovs" onclick="returnToMenu()">Play Again</button>
+                <button class="btn-ovs btn-outline mt-2" onclick="window.open('#', '_blank')">Unlock OVS Gear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Audio System (Web Audio API Synthesizer) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'bounce') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'swish') {
+                osc.type = 'triangle';
+                // Noise burst simulation using rapid frequency modulation
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'rim') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gainNode.gain.setValueAtTime(0.4, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'buzzer') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1.0);
+                osc.start(now);
+                osc.stop(now + 1.0);
+            }
+        }
+
+        // --- Game Engine & State ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Elements
+        const mainMenu = document.getElementById('main-menu');
+        const gameOverScreen = document.getElementById('game-over');
+        const hud = document.getElementById('hud');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const comboDisplay = document.getElementById('comboDisplay');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const modeLabel = document.getElementById('modeLabel');
+        const messageArea = document.getElementById('messageArea');
+
+        // Logical dimensions (fixed internal resolution)
+        const GAME_WIDTH = 1000;
+        const GAME_HEIGHT = 600;
+
+        let gameState = 'menu'; // menu, playing, gameover
+        let gameMode = 'arcade'; // arcade, time
+
+        let score = 0;
+        let combo = 1;
+        let timeLeft = 60;
+        let timerInterval;
+        let bestScore = localStorage.getItem('ovs_best_score') || 0;
+
+        // Physics constants
+        const GRAVITY = 0.4;
+        const DRAG = 0.99;
+        const BOUNCE_DAMPING = 0.7;
+
+        // --- Entities ---
+
+        const hoop = {
+            x: 800,
+            y: 250,
+            rimRadius: 35,
+            rimThickness: 5,
+            backboardW: 10,
+            backboardH: 140,
+            netLength: 60,
+            targetY: 250, // For movement
+            speedY: 1
+        };
+
+        const ball = {
+            x: 200,
+            y: 400,
+            radius: 18,
+            vx: 0,
+            vy: 0,
+            isShooting: false,
+            isDead: false,
+            rotation: 0,
+            rotSpeed: 0,
+            touchedRim: false,
+            touchedBoard: false,
+            passedHoop: false
+        };
+
+        const playerState = {
+            baseX: 180,
+            baseY: 480,
+            aiming: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            dragCurrentX: 0,
+            dragCurrentY: 0,
+            maxPower: 25,
+            powerMultiplier: 0.12
+        };
+
+        // --- Player Image Assets Setup ---
+        // 1. Create the image objects
+        const playerImages = {
+            idle: new Image(),
+            aiming: new Image(),
+            shooting: new Image()
+        };
+
+        // 2. Add your image URLs here (Local paths like 'assets/idle.png' or web links)
+        playerImages.idle.src = '../assets/Kasi_Hoops/kasi_hoop_charecter_1.png';    // Holding the ball
+        playerImages.aiming.src = '../assets/Kasi_Hoops/kasi_hoop_charecter_1.png';  // Aiming the ball
+        playerImages.shooting.src = '../assets/Kasi_Hoops/kasi_hoop_charecter_2.png'; // Throwing the ball
+
+        let particles = [];
+        let activeMessage = { text: "", timer: 0, color: "" };
+
+        // --- Input Handling ---
+
+        function getCanvasPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function handleInputStart(e) {
+            if (gameState !== 'playing' || ball.isShooting) return;
+            const pos = getCanvasPos(e);
+            playerState.aiming = true;
+            playerState.dragStartX = pos.x;
+            playerState.dragStartY = pos.y;
+            playerState.dragCurrentX = pos.x;
+            playerState.dragCurrentY = pos.y;
+        }
+
+        function handleInputMove(e) {
+            if (!playerState.aiming) return;
+            e.preventDefault(); // prevent scrolling
+            const pos = getCanvasPos(e);
+            playerState.dragCurrentX = pos.x;
+            playerState.dragCurrentY = pos.y;
+        }
+
+        function handleInputEnd(e) {
+            if (!playerState.aiming) return;
+            playerState.aiming = false;
+
+            const dx = playerState.dragStartX - playerState.dragCurrentX;
+            const dy = playerState.dragStartY - playerState.dragCurrentY;
+
+            // Prevent accidental taps
+            if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+
+            ball.vx = Math.min(Math.max(dx * playerState.powerMultiplier, -playerState.maxPower), playerState.maxPower);
+            ball.vy = Math.min(Math.max(dy * playerState.powerMultiplier, -playerState.maxPower), playerState.maxPower);
+
+            // Ensure forward motion
+            if (ball.vx <= 0) ball.vx = 5;
+
+            ball.isShooting = true;
+            ball.touchedRim = false;
+            ball.touchedBoard = false;
+            ball.passedHoop = false;
+            ball.rotSpeed = ball.vx * 0.05;
+        }
+
+        canvas.addEventListener('mousedown', handleInputStart);
+        window.addEventListener('mousemove', handleInputMove);
+        window.addEventListener('mouseup', handleInputEnd);
+
+        canvas.addEventListener('touchstart', handleInputStart, { passive: false });
+        window.addEventListener('touchmove', handleInputMove, { passive: false });
+        window.addEventListener('touchmove', handleInputMove, { passive: false });
+        window.addEventListener('touchend', handleInputEnd);
+
+        // --- Game Logic ---
+
+        function startGame(mode) {
+            audioCtx.resume();
+            gameMode = mode;
+            gameState = 'playing';
+            score = 0;
+            combo = 1;
+            timeLeft = 60;
+
+            mainMenu.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+
+            updateScoreUI();
+            resetBall();
+
+            hoop.y = 250;
+            hoop.targetY = 250;
+
+            if (mode === 'time') {
+                modeLabel.innerText = "Time";
+                timeDisplay.innerText = timeLeft;
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timeDisplay.innerText = timeLeft;
+                    if (timeLeft <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+            } else {
+                modeLabel.innerText = "Lives";
+                timeLeft = 3; // Use timeLeft as lives for arcade
+                timeDisplay.innerText = "♥♥♥";
+            }
+        }
+
+        function resetBall() {
+            // Change player position slightly based on score for difficulty
+            const offset = Math.min(score * 10, 300);
+            playerState.baseX = 200 - (Math.random() * offset * 0.5);
+
+            ball.x = playerState.baseX + 20;
+            ball.y = playerState.baseY - 80;
+            ball.vx = 0;
+            ball.vy = 0;
+            ball.isShooting = false;
+            ball.isDead = false;
+            ball.rotation = 0;
+            ball.touchedRim = false;
+            ball.touchedBoard = false;
+            ball.passedHoop = false;
+
+            // Move hoop occasionally
+            if (score > 5) {
+                hoop.targetY = 150 + Math.random() * 200;
+            }
+        }
+
+        function showMessage(text, color) {
+            const msgEl = document.getElementById('message-area');
+            msgEl.innerText = text;
+            msgEl.style.color = color;
+            msgEl.style.opacity = 1;
+            msgEl.style.transform = 'translate(-50%, -60%) scale(1.2)';
+
+            setTimeout(() => {
+                msgEl.style.opacity = 0;
+                msgEl.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 1000);
+        }
+
+        function spawnParticles(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
+        function handleScore() {
+            const isSwish = !ball.touchedRim && !ball.touchedBoard;
+            let points = 1 * combo;
+
+            if (isSwish) {
+                points += 1; // Bonus for swish
+                combo++;
+                showMessage("SWISH!", "#C25A3C");
+                spawnParticles(hoop.x, hoop.y, "#C25A3C");
+                playSound('swish');
+            } else {
+                combo = 1;
+                showMessage("+1", "#A67C52");
+                playSound('swish');
+            }
+
+            score += points;
+            updateScoreUI();
+        }
+
+        function handleMiss() {
+            combo = 1;
+            updateScoreUI();
+            if (gameMode === 'arcade') {
+                timeLeft--;
+                let livesStr = "";
+                for (let i = 0; i < timeLeft; i++) livesStr += "♥";
+                timeDisplay.innerText = livesStr || "0";
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }
+        }
+
+        function updateScoreUI() {
+            scoreDisplay.innerText = score;
+            if (combo > 1) {
+                comboDisplay.innerText = `Combo x${combo}`;
+                comboDisplay.style.opacity = 1;
+            } else {
+                comboDisplay.style.opacity = 0;
+            }
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+            clearInterval(timerInterval);
+            playSound('buzzer');
+
+            hud.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            finalScoreDisplay.innerText = score;
+
+            const bestMsg = document.getElementById('bestScoreMsg');
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('ovs_best_score', bestScore);
+                bestMsg.innerText = "NEW STREET RECORD!";
+                bestMsg.style.color = "#C25A3C";
+            } else {
+                bestMsg.innerText = `Record: ${bestScore}`;
+                bestMsg.style.color = "#A67C52";
+            }
+        }
+
+        function returnToMenu() {
+            gameState = 'menu';
+            gameOverScreen.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+        }
+
+        // --- Physics & Collision ---
+
+        function circleIntersect(x1, y1, r1, x2, y2, r2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            return (dx * dx + dy * dy) <= (r1 + r2) * (r1 + r2);
+        }
+
+        function resolveCircleCollision(bx, by, br, bvx, bvy, rx, ry, rr) {
+            // Calculate normal vector
+            let nx = bx - rx;
+            let ny = by - ry;
+            const dist = Math.sqrt(nx * nx + ny * ny);
+            if (dist === 0) return { vx: bvx, vy: bvy };
+
+            nx /= dist;
+            ny /= dist;
+
+            // Push ball out of rim
+            const overlap = (br + rr) - dist;
+            ball.x += nx * overlap;
+            ball.y += ny * overlap;
+
+            // Calculate relative velocity
+            const dotProduct = (bvx * nx) + (bvy * ny);
+
+            // If moving apart, don't resolve
+            if (dotProduct > 0) return { vx: bvx, vy: bvy };
+
+            // Coefficient of restitution
+            const restitution = BOUNCE_DAMPING;
+
+            // Apply bounce
+            const impulse = -(1 + restitution) * dotProduct;
+
+            playSound('rim');
+            return {
+                vx: bvx + impulse * nx,
+                vy: bvy + impulse * ny
+            };
+        }
+
+        function updatePhysics() {
+            if (!ball.isShooting) return;
+
+            ball.vy += GRAVITY;
+            ball.vx *= DRAG;
+            ball.vy *= DRAG;
+
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            ball.rotation += ball.rotSpeed;
+
+            // Hoop components
+            const leftRimX = hoop.x - hoop.rimRadius;
+            const rightRimX = hoop.x + hoop.rimRadius;
+            const rimY = hoop.y;
+
+            const boardLeft = hoop.x + hoop.rimRadius + 10;
+            const boardTop = hoop.y - 100;
+            const boardBottom = hoop.y + hoop.backboardH - 100;
+
+            // 1. Backboard Collision (AABB vs Circle approximation)
+            if (ball.x + ball.radius > boardLeft &&
+                ball.x - ball.radius < boardLeft + hoop.backboardW &&
+                ball.y > boardTop && ball.y < boardBottom) {
+
+                if (ball.vx > 0) { // Hit front of backboard
+                    ball.x = boardLeft - ball.radius;
+                    ball.vx *= -BOUNCE_DAMPING;
+                    ball.touchedBoard = true;
+                    playSound('bounce');
+                }
+            }
+
+            // 2. Rim Collisions (Front and Back points of the rim)
+            if (circleIntersect(ball.x, ball.y, ball.radius, leftRimX, rimY, hoop.rimThickness)) {
+                const newV = resolveCircleCollision(ball.x, ball.y, ball.radius, ball.vx, ball.vy, leftRimX, rimY, hoop.rimThickness);
+                ball.vx = newV.vx;
+                ball.vy = newV.vy;
+                ball.touchedRim = true;
+                ball.rotSpeed *= -0.5;
+            }
+            if (circleIntersect(ball.x, ball.y, ball.radius, rightRimX, rimY, hoop.rimThickness)) {
+                const newV = resolveCircleCollision(ball.x, ball.y, ball.radius, ball.vx, ball.vy, rightRimX, rimY, hoop.rimThickness);
+                ball.vx = newV.vx;
+                ball.vy = newV.vy;
+                ball.touchedRim = true;
+                ball.rotSpeed *= -0.5;
+            }
+
+            // 3. Scoring Logic
+            // Ball passes downward through the rim plane
+            if (ball.vy > 0 && ball.y > rimY && ball.y - ball.vy <= rimY) {
+                if (ball.x > leftRimX && ball.x < rightRimX) {
+                    if (!ball.passedHoop) {
+                        ball.passedHoop = true;
+                        handleScore();
+                    }
+                }
+            }
+
+            // 4. Ground / Out of bounds
+            if (ball.y > GAME_HEIGHT - 50) {
+                ball.y = GAME_HEIGHT - 50;
+                ball.vy *= -BOUNCE_DAMPING;
+                if (Math.abs(ball.vy) > 1) {
+                    playSound('bounce');
+                } else {
+                    ball.isDead = true;
+                }
+                ball.vx *= 0.8; // friction
+
+                if (!ball.passedHoop && ball.x > GAME_WIDTH / 2) {
+                    // If it reached the ground without scoring and passed halfway
+                    handleMiss();
+                    ball.passedHoop = true; // Prevent multiple misses
+                }
+            }
+
+            if (ball.x > GAME_WIDTH + 100 || ball.x < -100) {
+                ball.isDead = true;
+                if (!ball.passedHoop) handleMiss();
+            }
+
+            // Reset when ball is dead
+            if (ball.isDead && Math.abs(ball.vx) < 0.1) {
+                setTimeout(resetBall, 500);
+                ball.isDead = false; // Prevent multiple resets
+            }
+
+            // Move Hoop (Difficulty)
+            if (score > 5) {
+                hoop.y += (hoop.targetY - hoop.y) * 0.05;
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += GRAVITY * 0.5;
+                p.life -= 0.02;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        // --- Rendering ---
+
+        function drawBackground() {
+            // Sunset Gradient
+            let grad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+            grad.addColorStop(0, '#A67C52'); // ovs-earth
+            grad.addColorStop(0.5, '#C25A3C'); // ovs-clay
+            grad.addColorStop(1, '#E6DCC8'); // ovs-sand
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // Kasi Skyline Silhouette
+            ctx.fillStyle = '#2D2D2A'; // charcoal
+
+            // Buildings
+            ctx.fillRect(50, 400, 80, 200);
+            ctx.fillRect(150, 350, 60, 250);
+            ctx.fillRect(250, 420, 100, 180);
+            ctx.fillRect(600, 380, 120, 220);
+            ctx.fillRect(800, 320, 90, 280);
+            ctx.fillRect(920, 450, 80, 150);
+
+            // Graffiti / Text on a wall
+            ctx.fillStyle = 'rgba(230, 220, 200, 0.1)';
+            ctx.font = 'bold 120px Montserrat';
+            ctx.save();
+            ctx.translate(650, 480);
+            ctx.rotate(-0.1);
+            ctx.fillText("OVS", 0, 0); // Updated graffiti to OVS
+            ctx.restore();
+
+            // Taxi Silhouette (Iconic SA element)
+            ctx.fillStyle = '#1a1a18';
+            // Taxi Body
+            ctx.fillRect(380, 520, 140, 50);
+            // Roof
+            ctx.fillRect(400, 490, 100, 30);
+            // Wheels
+            ctx.beginPath(); ctx.arc(410, 570, 15, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(490, 570, 15, 0, Math.PI * 2); ctx.fill();
+
+            // Floor / Court
+            ctx.fillStyle = '#4A5D23'; // olive
+            ctx.beginPath();
+            ctx.moveTo(0, GAME_HEIGHT - 40);
+            ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 60);
+            ctx.lineTo(GAME_WIDTH, GAME_HEIGHT);
+            ctx.lineTo(0, GAME_HEIGHT);
+            ctx.fill();
+
+            // Court lines
+            ctx.strokeStyle = '#E6DCC8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, GAME_HEIGHT - 20);
+            ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 40);
+            ctx.stroke();
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(playerState.baseX, playerState.baseY);
+
+            // 1. Determine which image to show based on game state
+            let currentImg = playerImages.idle;
+
+            if (playerState.aiming) {
+                currentImg = playerImages.aiming;
+            } else if (ball.isShooting) {
+                currentImg = playerImages.shooting;
+            }
+
+            // 2. Draw the player image
+            // Parameters: (image, x, y, width, height)
+            const imgWidth = 200; // Increased size
+            const imgHeight = currentImg.width ? (currentImg.height / currentImg.width) * imgWidth : 300;
+            const offsetX = -imgWidth / 2; // Centers horizontal
+            const offsetY = 80 - imgHeight; // Aligns feet to the baseline
+
+            if (currentImg.complete) {
+                ctx.drawImage(currentImg, offsetX, offsetY, imgWidth, imgHeight);
+            }
+
+            // 3. The ball is already baked into character 1's graphic
+            // so we hide the engine-drawn ball until they actually shoot it.
+            /* 
+            if (playerState.aiming) {
+                drawBallAt(40, -40, ball.radius, 0);
+            } else if (!ball.isShooting) {
+                drawBallAt(25, -20, ball.radius, 0);
+            }
+            */
+
+            ctx.restore();
+        }
+
+        function drawBallAt(x, y, r, rot) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rot);
+
+            // Orange base
+            ctx.fillStyle = '#C25A3C';
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lines
+            ctx.strokeStyle = '#2D2D2A';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(0, r); ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(-r * 0.5, 0, r, -Math.PI / 3, Math.PI / 3);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(r * 0.5, 0, r, Math.PI - Math.PI / 3, Math.PI + Math.PI / 3);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawTrajectory() {
+            if (!playerState.aiming) return;
+
+            const dx = playerState.dragStartX - playerState.dragCurrentX;
+            const dy = playerState.dragStartY - playerState.dragCurrentY;
+
+            let vx = Math.min(Math.max(dx * playerState.powerMultiplier, -playerState.maxPower), playerState.maxPower);
+            let vy = Math.min(Math.max(dy * playerState.powerMultiplier, -playerState.maxPower), playerState.maxPower);
+            if (vx <= 0) vx = 5;
+
+            // Origin of shot
+            let startX = playerState.baseX + 40;
+            let startY = playerState.baseY - 40;
+
+            ctx.fillStyle = 'rgba(230, 220, 200, 0.5)';
+
+            let simX = startX;
+            let simY = startY;
+
+            for (let i = 0; i < 30; i++) {
+                simX += vx;
+                simY += vy;
+                vy += GRAVITY;
+                vx *= DRAG;
+                vy *= DRAG;
+
+                if (i % 3 === 0) {
+                    ctx.beginPath();
+                    ctx.arc(simX, simY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawHoop() {
+            // Post
+            ctx.fillStyle = '#2D2D2A';
+            ctx.fillRect(hoop.x + hoop.rimRadius + 5, hoop.y, 10, GAME_HEIGHT - hoop.y);
+
+            // Backboard
+            ctx.fillStyle = 'rgba(230, 220, 200, 0.9)'; // Slightly transparent sand
+            ctx.fillRect(hoop.x + hoop.rimRadius + 5, hoop.y - 100, hoop.backboardW, hoop.backboardH);
+
+            // Backboard Target Square
+            ctx.strokeStyle = '#C25A3C';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(hoop.x + hoop.rimRadius + 5, hoop.y - 40, 5, 40);
+
+            // Net (Draw back half first)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(hoop.x - hoop.rimRadius, hoop.y);
+            ctx.lineTo(hoop.x - 20, hoop.y + hoop.netLength);
+            ctx.lineTo(hoop.x + 20, hoop.y + hoop.netLength);
+            ctx.lineTo(hoop.x + hoop.rimRadius, hoop.y);
+
+            // Net criss-cross
+            for (let i = 1; i < 4; i++) {
+                ctx.moveTo(hoop.x - hoop.rimRadius + (i * 15), hoop.y);
+                ctx.lineTo(hoop.x - 20 + (i * 10), hoop.y + hoop.netLength);
+
+                ctx.moveTo(hoop.x + hoop.rimRadius - (i * 15), hoop.y);
+                ctx.lineTo(hoop.x + 20 - (i * 10), hoop.y + hoop.netLength);
+            }
+            ctx.stroke();
+
+            // Rim
+            ctx.fillStyle = '#C25A3C';
+            ctx.beginPath();
+            ctx.ellipse(hoop.x, hoop.y, hoop.rimRadius, hoop.rimThickness, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Front rim highlight
+            ctx.fillStyle = '#E6DCC8';
+            ctx.beginPath();
+            ctx.arc(hoop.x - hoop.rimRadius, hoop.y, hoop.rimThickness * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            drawBackground();
+            drawHoop();
+            drawPlayer();
+
+            if (ball.isShooting) {
+                drawBallAt(ball.x, ball.y, ball.radius, ball.rotation);
+            } else {
+                drawTrajectory();
+            }
+
+            drawParticles();
+        }
+
+        // --- Main Game Loop ---
+
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            lastTime = timestamp;
+
+            if (gameState === 'playing') {
+                updatePhysics();
+                updateParticles();
+            }
+
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        requestAnimationFrame(gameLoop);
+
+    </script>
+</body>
+
+</html>
