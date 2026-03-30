@@ -1,43 +1,60 @@
 export default class Storage {
     static getHighScore() {
-        return parseInt(localStorage.getItem('soweto_highscore') || '0', 10);
+        try {
+            return parseInt(localStorage.getItem('soweto_highscore') || '0', 10);
+        } catch(e) {
+            return 0;
+        }
     }
 
     static saveHighScore(score) {
-        let current = this.getHighScore();
-        if (score > current) {
-            localStorage.setItem('soweto_highscore', score);
-        }
+        try {
+            let current = this.getHighScore();
+            if (score > current) {
+                localStorage.setItem('soweto_highscore', score);
+            }
+        } catch(e) {}
     }
 
     static getUnlockedSkins() {
-        let skins = localStorage.getItem('soweto_skins');
-        if (!skins) {
-            // Default skin is 'base'
+        try {
+            let skins = localStorage.getItem('soweto_skins');
+            if (!skins) return ['base'];
+            return JSON.parse(skins);
+        } catch(e) {
             return ['base'];
         }
-        return JSON.parse(skins);
     }
 
     static unlockSkin(skinName) {
-        let skins = this.getUnlockedSkins();
-        if (!skins.includes(skinName)) {
-            skins.push(skinName);
-            localStorage.setItem('soweto_skins', JSON.stringify(skins));
-            return true;
+        try {
+            let skins = this.getUnlockedSkins();
+            if (!skins.includes(skinName)) {
+                skins.push(skinName);
+                localStorage.setItem('soweto_skins', JSON.stringify(skins));
+                return true;
+            }
+            return false;
+        } catch(e) {
+            return false;
         }
-        return false;
     }
 
     static getCurrentSkin() {
-        return localStorage.getItem('soweto_current_skin') || 'base';
+        try {
+            return localStorage.getItem('soweto_current_skin') || 'base';
+        } catch(e) {
+            return 'base';
+        }
     }
 
     static setCurrentSkin(skinName) {
-        let skins = this.getUnlockedSkins();
-        if (skins.includes(skinName)) {
-            localStorage.setItem('soweto_current_skin', skinName);
-        }
+        try {
+            let skins = this.getUnlockedSkins();
+            if (skins.includes(skinName)) {
+                localStorage.setItem('soweto_current_skin', skinName);
+            }
+        } catch(e) {}
     }
 
     static redeemCode(code) {
