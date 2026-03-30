@@ -296,7 +296,7 @@
                 this.obstacleTimer = this.time.addEvent({ delay: 1500, callback: this.spawnObstacle, callbackScope: this, loop: true });
                 this.collectibleTimer = this.time.addEvent({ delay: 2000, callback: this.spawnCollectible, callbackScope: this, loop: true });
                 this.speedTimer = this.time.addEvent({ delay: 10000, callback: () => { this.gameSpeed += 0.5; }, loop: true });
-                this.particles = this.add.particles(0, 0, 'col_logo', { speed: 100, scale: { start: 0.5, end: 0 }, alpha: { start: 1, end: 0 }, lifespan: 500, emitting: false }).setDepth(20);
+                this.particles = this.add.particles(0, 0, 'col_coin', { speed: 100, scale: { start: 0.5, end: 0 }, alpha: { start: 1, end: 0 }, lifespan: 500, emitting: false }).setDepth(20);
             }
 
             update(time, delta) {
@@ -396,7 +396,7 @@
             }
             spawnCollectible() {
                 if (this.isGameOver) return;
-                const tex = Phaser.Math.Between(1, 10) > 8 ? 'col_logo' : 'col_coin';
+                const tex = 'col_coin'; // Only spawn the Oviaas Coin!
                 const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex);
                 // Force size regardless of source dimensions so large JPEGs don't break the layout
                 item.setDisplaySize(40, 40);
@@ -411,8 +411,12 @@
                 this.gameOver();
             }
             collectItem(player, item) {
-                if (item.itemType === 'col_logo') { gameData.addCoins(5); this.ui.showFloatingText('+5 COINS', item.x, item.y, '#ffcc00'); this.particles.emitParticleAt(item.x, item.y, 10); }
-                else { this.score += 50; this.ui.showFloatingText('+50', item.x, item.y, '#00ffcc'); }
+                if (item.itemType === 'col_coin') { 
+                    gameData.addCoins(1); 
+                    this.score += 20; 
+                    this.ui.showFloatingText('+1 COIN', item.x, item.y, '#ffcc00'); 
+                    this.particles.emitParticleAt(item.x, item.y, 10); 
+                }
                 item.destroy();
             }
             gameOver() {
