@@ -180,6 +180,8 @@ export default function Showroom() {
                   <img
                     src={currentFeatured.image}
                     alt={currentFeatured.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover rounded-xl transition-transform duration-700 group-hover:scale-110"
                     referrerPolicy="no-referrer"
                   />
@@ -261,6 +263,8 @@ export default function Showroom() {
                   <img 
                     src={product.image} 
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                     referrerPolicy="no-referrer"
                   />
@@ -343,6 +347,8 @@ export default function Showroom() {
                 <img 
                   src={selectedProduct.image} 
                   alt={selectedProduct.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover" 
                   referrerPolicy="no-referrer"
                 />

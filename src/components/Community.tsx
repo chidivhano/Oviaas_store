@@ -48,6 +48,8 @@ export default function Community() {
               <img
                 src={post.image}
                 alt={`User ${post.user}`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />

@@ -138,7 +138,7 @@ export default function EntertainmentHub() {
                     onClick={() => handleLaunch(item.title)}
                     className="min-w-[300px] md:min-w-[400px] aspect-video relative rounded-2xl overflow-hidden group snap-center cursor-pointer"
                   >
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer" />
+                    <img src={item.image} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
                     
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-75 group-hover:scale-100">
@@ -171,7 +171,7 @@ export default function EntertainmentHub() {
                     onClick={() => handleLaunch(game.title)}
                     className="aspect-square relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 hover:border-[#b026ff]/50 transition-colors"
                   >
-                    <img src={game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
+                    <img src={game.image} alt={game.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
                     <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors" />
                     
                     <div className="absolute inset-0 p-8 flex flex-col items-center justify-center text-center">
@@ -204,7 +204,7 @@ export default function EntertainmentHub() {
                     className="flex flex-col items-center group cursor-pointer"
                   >
                     <div className="w-full aspect-square relative rounded-full overflow-hidden mb-6 border-4 border-dark-surface group-hover:border-[#00f0ff]/50 transition-colors duration-500">
-                      <img src={album.image} alt={album.title} className="w-full h-full object-cover animate-[spin_20s_linear_infinite] group-hover:animate-[spin_10s_linear_infinite]" referrerPolicy="no-referrer" />
+                      <img src={album.image} alt={album.title} loading="lazy" decoding="async" className="w-full h-full object-cover animate-[spin_20s_linear_infinite] group-hover:animate-[spin_10s_linear_infinite]" referrerPolicy="no-referrer" />
                       <div className="absolute inset-0 bg-black/20" />
                       {/* Vinyl Center */}
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/4 h-1/4 bg-dark-bg rounded-full border-4 border-dark-surface flex items-center justify-center">

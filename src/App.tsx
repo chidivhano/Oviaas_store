@@ -1,13 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hero from './components/Hero';
 import Navigation from './components/Navigation';
-import Showroom from './components/Showroom';
-import Collections from './components/Collections';
-import EntertainmentHub from './components/EntertainmentHub';
-import BrandStory from './components/BrandStory';
-import Community from './components/Community';
 import Cart from './components/Cart';
+
+const Showroom = lazy(() => import('./components/Showroom'));
+const Collections = lazy(() => import('./components/Collections'));
+const EntertainmentHub = lazy(() => import('./components/EntertainmentHub'));
+const BrandStory = lazy(() => import('./components/BrandStory'));
+const Community = lazy(() => import('./components/Community'));
 
 export default function App() {
   const [isEntered, setIsEntered] = useState(false);
@@ -87,23 +88,25 @@ export default function App() {
             />
             
             <main>
-              <section ref={showroomRef} id="showroom">
-                <Showroom />
-              </section>
-              
-              <BrandStory />
-              
-              <section ref={collectionsRef} id="collections">
-                <Collections />
-              </section>
-              
-              <section ref={entertainmentRef} id="entertainment">
-                <EntertainmentHub />
-              </section>
-              
-              <section ref={communityRef} id="community">
-                <Community />
-              </section>
+              <Suspense fallback={<div className="w-full h-96 flex items-center justify-center text-white/50 text-xs tracking-widest uppercase animate-pulse">Loading Environment...</div>}>
+                <section ref={showroomRef} id="showroom">
+                  <Showroom />
+                </section>
+                
+                <BrandStory />
+                
+                <section ref={collectionsRef} id="collections">
+                  <Collections />
+                </section>
+                
+                <section ref={entertainmentRef} id="entertainment">
+                  <EntertainmentHub />
+                </section>
+                
+                <section ref={communityRef} id="community">
+                  <Community />
+                </section>
+              </Suspense>
             </main>
 
             {/* Footer */}
@@ -112,6 +115,8 @@ export default function App() {
                 <img 
                   src="/Oviaas_Logo.jpeg" 
                   alt="Oviaas Logo" 
+                  loading="lazy"
+                  decoding="async"
                   className="w-12 h-12 rounded-full object-cover border border-white/20 grayscale opacity-50"
                   referrerPolicy="no-referrer"
                 />
