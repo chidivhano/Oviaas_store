@@ -275,9 +275,13 @@
                 // Start the player with the custom asset
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
-                // Force size regardless of source resolution for predictable hitboxes
-                this.player.setDisplaySize(85, 140); 
-                this.player.body.setSize(65, 120); // Slightly smaller collision body for better gameplay feel
+                
+                // Scale player to be large and clear, preserving its natural proportions
+                this.player.displayWidth = 90; // Large visibility to showcase merch
+                this.player.scaleY = this.player.scaleX; // Lock aspect ratio so it doesn't look squished/blurry
+                
+                // Keep the physics body tighter than the image itself to allow near-misses
+                this.player.body.setSize(this.player.width * 0.6, this.player.height * 0.8);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
@@ -380,9 +384,14 @@
                     isLow = true;
                 }
                 const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex);
-                // Cars are narrow but long. This fits perfectly within a lane!
-                obs.setDisplaySize(95, 190);
-                obs.body.setSize(80, 170); // Narrower collision box to avoid lane bleed
+                
+                // Dynamically lock aspect ratio. All cars will be 70px wide safely inside the lane.
+                obs.displayWidth = 70; 
+                obs.scaleY = obs.scaleX; // Prevents "Gusheshe 2" from looking squashed/weird
+                
+                // Center the collision box and make it slightly smaller than the drawing
+                obs.body.setSize(obs.width * 0.7, obs.height * 0.85);
+                
                 obs.typeData = { tex, isHigh, isLow };
             }
             spawnCollectible() {
