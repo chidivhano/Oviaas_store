@@ -275,7 +275,8 @@
                 // Start the player with the custom asset
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
-                this.player.setScale(0.8); // Adjust scale for the image
+                // Make character smaller
+                this.player.setScale(0.35);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
@@ -383,7 +384,9 @@
             spawnCollectible() {
                 if (this.isGameOver) return;
                 const tex = Phaser.Math.Between(1, 10) > 8 ? 'col_logo' : 'col_coin';
-                const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex).setScale(0.5);
+                const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex);
+                // Force size regardless of source dimensions so large JPEGs don't break the layout
+                item.setDisplaySize(40, 40);
                 item.itemType = tex;
                 this.tweens.add({ targets: item, y: item.y - 10, duration: 500, yoyo: true, repeat: -1 });
             }
