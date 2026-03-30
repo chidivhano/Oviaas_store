@@ -16,10 +16,11 @@ const content = {
   ],
   games: [
     { id: 1, title: 'Soweto Run Oviaas', genre: 'Endless Runner', image: `${import.meta.env.BASE_URL}assets/gusheshe.png`, gamePath: `${import.meta.env.BASE_URL}Soweto_Run_Oviaas/index.html` },
-    { id: 2, title: 'Neon Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter.png` },
-    { id: 3, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}assets/Oviaas_Coin.png` },
-    { id: 4, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}assets/gusheshe_2.png` },
-    { id: 5, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter_2.png` },
+    { id: 2, title: 'Kasi Hoops', genre: 'Arcade Basketball', image: `${import.meta.env.BASE_URL}assets/Kasi_Hoops/kasi_hoop_charecter_1.png`, gamePath: `${import.meta.env.BASE_URL}Kasi_Hoops/index.html` },
+    { id: 3, title: 'Neon Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter.png` },
+    { id: 4, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}assets/Oviaas_Coin.png` },
+    { id: 5, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}assets/gusheshe_2.png` },
+    { id: 6, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter_2.png` },
   ],
   music: [
     { id: 1, title: 'Oviaas Vol. 1', artist: 'Various Artists', image: 'https://picsum.photos/seed/music_vol1/500/500' },
