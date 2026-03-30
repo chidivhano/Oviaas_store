@@ -276,8 +276,8 @@
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
                 // Force size regardless of source resolution for predictable hitboxes
-                this.player.setDisplaySize(50, 85); 
-                this.player.body.setSize(40, 70); // Slightly smaller collision body for better gameplay feel
+                this.player.setDisplaySize(85, 140); 
+                this.player.body.setSize(65, 120); // Slightly smaller collision body for better gameplay feel
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
@@ -381,8 +381,8 @@
                 }
                 const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex);
                 // Cars are narrow but long. This fits perfectly within a lane!
-                obs.setDisplaySize(65, 130);
-                obs.body.setSize(55, 120); // Narrower collision box to avoid lane bleed
+                obs.setDisplaySize(95, 190);
+                obs.body.setSize(80, 170); // Narrower collision box to avoid lane bleed
                 obs.typeData = { tex, isHigh, isLow };
             }
             spawnCollectible() {
