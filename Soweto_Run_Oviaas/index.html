@@ -37,7 +37,7 @@
     <script>
         class DataHandler {
             constructor() {
-                this.defaultData = { highScore: 0, coins: 0, activeSkin: 'base', unlockedSkins: ['base'] };
+                this.defaultData = { highScore: 0, coins: 0, activeSkin: 'base', unlockedSkins: ['base', 'player_2', 'player_3'] };
                 this.load();
             }
             load() {
@@ -83,6 +83,8 @@
             preload() {
                 // Load Custom Assets from the corrected 'assets' folder
                 this.load.image('player_body', '../assets/charecter_2.png');
+                this.load.image('player_2', '../assets/player_2.png'); 
+                this.load.image('player_3', '../assets/player_3.png'); 
                 this.load.image('obs_taxi', '../assets/gusheshe.png');
                 this.load.image('obs_gusheshe_2', '../assets/gusheshe_2.png');
                 this.load.image('obs_pothole', '../assets/pothole.png'); // Add new pothole asset
@@ -228,9 +230,9 @@
                 this.add.text(width / 2, 50, 'SELECT YOUR DRIP', { font: '32px Impact', fill: '#fff' }).setOrigin(0.5);
 
                 const skins = [
-                    { key: 'base', name: 'Original', tex: 'player_base_f1' }, // Use frame 1 for static preview
-                    { key: 'gold_hustle', name: 'Gold Hustle', tex: 'player_gold_hustle_f1' },
-                    { key: 'kasi_king', name: 'Kasi King', tex: 'player_kasi_king_f1' }
+                    { key: 'base', name: 'Original', tex: 'player_body' }, 
+                    { key: 'player_2', name: 'Player 2', tex: 'player_2' },
+                    { key: 'player_3', name: 'Player 3', tex: 'player_3' }
                 ];
 
                 let startY = 150;
@@ -272,9 +274,9 @@
 
                 this.obstacles = this.physics.add.group(); this.collectibles = this.physics.add.group();
 
-                // --- PLAYER ANIMATION SETUP ---
-                // Start the player with the custom asset
-                this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
+                // Start the player with the chosen asset
+                const currentSkin = gameData.data.activeSkin === 'base' ? 'player_body' : gameData.data.activeSkin;
+                this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, currentSkin);
                 this.player.setDepth(10);
                 
                 // Scale player to be extremely large and clear, showcasing merch
