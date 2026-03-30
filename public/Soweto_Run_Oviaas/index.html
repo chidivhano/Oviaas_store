@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Soweto King | Obvious Studios</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            overflow: hidden;
+            touch-action: none;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container"></div>
+
+    <script>
+        class DataHandler {
+            constructor() {
+                this.defaultData = { highScore: 0, coins: 0, activeSkin: 'base', unlockedSkins: ['base'] };
+                this.load();
+            }
+            load() {
+                const saved = localStorage.getItem('obvious_soweto_run_data');
+                this.data = saved ? { ...this.defaultData, ...JSON.parse(saved) } : { ...this.defaultData };
+            }
+            save() { localStorage.setItem('obvious_soweto_run_data', JSON.stringify(this.data)); }
+            updateScore(score) {
+                if (score > this.data.highScore) { this.data.highScore = score; this.save(); return true; }
+                return false;
+            }
+            addCoins(amount) { this.data.coins += amount; this.save(); }
+            unlockSkin(skinKey) {
+                if (!this.data.unlockedSkins.includes(skinKey)) { this.data.unlockedSkins.push(skinKey); this.save(); return true; }
+                return false;
+            }
+            setActiveSkin(skinKey) {
+                if (this.data.unlockedSkins.includes(skinKey)) { this.data.activeSkin = skinKey; this.save(); }
+            }
+            redeemCode(code) {
+                const codes = {
+                    'OBVIOUS26': { type: 'skin', value: 'gold_hustle', name: 'Gold Hustle Fit' },
+                    'KASIKING': { type: 'skin', value: 'kasi_king', name: 'Kasi King Jacket' },
+                    'SOWETO': { type: 'coins', value: 500, name: '500 Obvious Coins' }
+                };
+                const reward = codes[code.toUpperCase()];
+                if (reward) {
+                    if (reward.type === 'skin') return this.unlockSkin(reward.value) ? `Unlocked: ${reward.name}!` : `You already own ${reward.name}.`;
+                    if (reward.type === 'coins') { this.addCoins(reward.value); return `Added: ${reward.name}!`; }
+                }
+                return "Invalid or Expired Code.";
+            }
+        }
+        const gameData = new DataHandler();
+
+        // ==========================================
+        // SCENES
+        // ==========================================
+
+        class BootScene extends Phaser.Scene {
+            constructor() { super('BootScene'); }
+
+            preload() {
+                // ========================================================================
+                // 🏃 HOW TO LOAD YOUR OWN ANIMATED SPRITESHEET 🏃
+                // ========================================================================
+                // 1. Create an image containing your frames side-by-side (e.g., frame 1 is 60x100, frame 2 is 60x100, total image size is 120x100).
+                // 2. Load it as a 'spritesheet' instead of an 'image'.
+                // 3. Uncomment the line below and adjust the frameWidth/Height to match your art.
+
+                // this.load.spritesheet('my_custom_player', 'assets/my_animated_character.png', { frameWidth: 60, frameHeight: 100 });
+
+                // Alternative: If you just have two separate image files (run1.png, run2.png):
+                // this.load.image('run_frame_1', 'assets/run1.png');
+                // this.load.image('run_frame_2', 'assets/run2.png');
+            }
+
+            create() {
+                const g = this.make.graphics({ x: 0, y: 0, add: false });
+
+                // Generate Animated Textures (2 frames per skin!)
+                this.generateAnimatedPlayer(g, 'player_base', 0xff3366, 0x111111);
+                this.generateAnimatedPlayer(g, 'player_gold_hustle', 0xffcc00, 0xffffff);
+                this.generateAnimatedPlayer(g, 'player_kasi_king', 0x00ccff, 0x222222);
+
+                this.generateTaxiTexture(g);
+                this.generatePotholeTexture(g);
+                this.generateBarrierTexture(g);
+                this.generateSneakerTexture(g);
+                this.generateLogoTexture(g);
+
+                // --- CREATE THE ANIMATIONS GLOBALLY ---
+                // We create these here so they can be used in the GameScene and SkinScene
+                const skins = ['base', 'gold_hustle', 'kasi_king'];
+                skins.forEach(skin => {
+                    this.anims.create({
+                        key: `skate_${skin}`,
+                        // We pass the two frames we generated into the animation sequence
+                        frames: [
+                            { key: `player_${skin}_f1` },
+                            { key: `player_${skin}_f2` }
+                        ],
+                        frameRate: 4, // Slower/smoother for a skate push
+                        repeat: -1    // -1 means loop forever
+                    });
+                });
+
+                this.scene.start('MenuScene');
+            }
+
+            // Helper to draw the top half of the body (it stays the same)
+            drawTorso(g, primaryColor, secondaryColor) {
+                g.fillStyle(0x000000, 0.3); g.fillEllipse(30, 95, 40, 15); // Shadow
+                g.fillStyle(primaryColor, 1); g.fillRoundedRect(15, 20, 30, 35, 8); // Hoodie
+                g.fillStyle(secondaryColor, 1); g.fillRect(15, 35, 30, 5); // Stripe
+                g.fillStyle(0x8d5524, 1); g.fillCircle(30, 15, 12); // Head
+                g.fillStyle(secondaryColor, 1); g.beginPath(); g.arc(30, 15, 12, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(360), false); g.fillPath(); // Cap
+            }
+
+            drawSkateboard(g) {
+                // Skateboard deck
+                g.fillStyle(0xcc5500, 1);
+                g.fillRoundedRect(10, 80, 40, 6, 3);
+                // Wheels
+                g.fillStyle(0x111111, 1);
+                g.fillCircle(18, 88, 4);
+                g.fillCircle(42, 88, 4);
+            }
+
+            generateAnimatedPlayer(g, key, primaryColor, secondaryColor) {
+                // FRAME 1: Pushing the skateboard
+                g.clear();
+                this.drawSkateboard(g);
+                this.drawTorso(g, primaryColor, secondaryColor);
+                g.fillStyle(0x333333, 1);
+                g.fillRect(20, 50, 8, 30); // Left leg on board
+                g.fillRect(36, 50, 8, 38); // Right leg pushing ground
+                g.generateTexture(`${key}_f1`, 60, 100);
+
+                // FRAME 2: Coasting (Both feet on board)
+                g.clear();
+                this.drawSkateboard(g);
+                this.drawTorso(g, primaryColor, secondaryColor);
+                g.fillStyle(0x333333, 1);
+                g.fillRect(16, 50, 8, 30); // Left leg front
+                g.fillRect(36, 50, 8, 30); // Right leg back
+                g.generateTexture(`${key}_f2`, 60, 100);
+            }
+
+            generateTaxiTexture(g) {
+                g.clear(); g.fillStyle(0xffffff, 1); g.fillRoundedRect(0, 0, 80, 140, 10);
+                g.fillStyle(0x111111, 1); g.fillRect(5, 20, 70, 30); g.fillRect(5, 60, 15, 40); g.fillRect(60, 60, 15, 40);
+                g.fillStyle(0xffcc00, 1); g.fillRect(0, 110, 80, 10); g.fillStyle(0x009933, 1); g.fillRect(0, 120, 80, 10);
+                g.fillStyle(0xff0000, 1); g.fillCircle(15, 10, 5); g.fillCircle(65, 10, 5);
+                g.generateTexture('taxi', 80, 140);
+            }
+            generatePotholeTexture(g) {
+                g.clear(); g.fillStyle(0x2a2a2a, 1); g.fillEllipse(40, 20, 70, 30); g.fillStyle(0x1a1a1a, 1); g.fillEllipse(40, 22, 50, 20);
+                g.generateTexture('pothole', 80, 40);
+            }
+            generateBarrierTexture(g) {
+                g.clear(); g.fillStyle(0xff6600, 1); g.fillRect(0, 10, 80, 20); g.fillStyle(0xffffff, 1); g.fillRect(10, 10, 15, 20); g.fillRect(35, 10, 15, 20); g.fillRect(60, 10, 15, 20); g.fillStyle(0x555555, 1); g.fillRect(10, 30, 5, 20); g.fillRect(65, 30, 5, 20);
+                g.generateTexture('barrier', 80, 50);
+            }
+            generateSneakerTexture(g) {
+                g.clear(); g.fillStyle(0x00ffcc, 1); g.fillRoundedRect(10, 15, 40, 20, 10); g.fillStyle(0xffffff, 1); g.fillRect(10, 30, 40, 5); g.fillStyle(0xff0066, 1); g.fillTriangle(20, 15, 30, 5, 40, 15);
+                g.generateTexture('sneaker', 60, 40);
+            }
+            generateLogoTexture(g) {
+                g.clear(); g.lineStyle(6, 0xffcc00, 1); g.strokeCircle(25, 25, 20); g.lineStyle(4, 0xffffff, 1); g.strokeCircle(25, 25, 12);
+                g.generateTexture('logo', 50, 50);
+            }
+        }
+
+        class MenuScene extends Phaser.Scene {
+            constructor() { super('MenuScene'); }
+            create() {
+                const width = this.cameras.main.width; const height = this.cameras.main.height;
+                this.add.rectangle(0, 0, width, height, 0x111111).setOrigin(0);
+                const grid = this.add.grid(width / 2, height / 2, width * 2, height * 2, 60, 60, 0x111111, 1, 0x333333, 0.5);
+                this.tweens.add({ targets: grid, y: height / 2 + 60, duration: 1000, repeat: -1 });
+
+                this.add.text(width / 2, height * 0.10, 'PRESENTED BY OBVIOUS STUDIOS', { font: 'bold 16px Arial', fill: '#ffcc00', letterSpacing: 2 }).setOrigin(0.5);
+                this.add.text(width / 2, height * 0.17, 'SOWETO', { font: 'bold 64px Impact', fill: '#ff3366' }).setOrigin(0.5).setShadow(3, 3, '#000', 0);
+                this.add.text(width / 2, height * 0.25, 'KING', { font: 'bold 80px Impact', fill: '#ffffff' }).setOrigin(0.5).setShadow(4, 4, '#ffcc00', 0);
+                this.add.text(width / 2, height * 0.38, `HIGH SCORE: ${gameData.data.highScore}`, { font: '24px Impact', fill: '#aaa' }).setOrigin(0.5);
+                this.add.text(width / 2, height * 0.43, `COINS: ${gameData.data.coins}`, { font: '24px Impact', fill: '#ffcc00' }).setOrigin(0.5);
+
+                this.createBtn(width / 2, height * 0.58, 'TAP TO SKATE', 0xff3366, () => this.scene.start('GameScene'));
+                this.createBtn(width / 2, height * 0.70, 'MERCH CODES', 0x222222, () => this.promptCode());
+                this.createBtn(width / 2, height * 0.80, 'CHANGE DRIP', 0x222222, () => this.scene.start('SkinScene'));
+                this.add.text(width / 2, height * 0.95, '© OBVIOUS STUDIOS', { font: '14px Arial', fill: '#555' }).setOrigin(0.5);
+            }
+            createBtn(x, y, text, color, callback) {
+                const btn = this.add.container(x, y);
+                const bg = this.add.rectangle(0, 0, 260, 60, color).setInteractive({ useHandCursor: true }).setStrokeStyle(4, 0xffffff);
+                const txt = this.add.text(0, 0, text, { font: '24px Impact', fill: '#fff' }).setOrigin(0.5);
+                btn.add([bg, txt]);
+                bg.on('pointerdown', () => { bg.setFillStyle(0xaaaaaa); this.tweens.add({ targets: btn, scaleX: 0.9, scaleY: 0.9, duration: 50, yoyo: true }); });
+                bg.on('pointerup', () => { bg.setFillStyle(color); callback(); });
+            }
+            promptCode() {
+                const code = prompt("Enter your Obvious Studios Smart Merch Code:");
+                if (code && code.trim() !== "") { alert(gameData.redeemCode(code.trim())); this.scene.restart(); }
+            }
+        }
+
+        class SkinScene extends Phaser.Scene {
+            constructor() { super('SkinScene'); }
+            create() {
+                const width = this.cameras.main.width; const height = this.cameras.main.height;
+                this.add.rectangle(0, 0, width, height, 0x111111).setOrigin(0);
+                this.add.text(width / 2, 50, 'SELECT YOUR DRIP', { font: '32px Impact', fill: '#fff' }).setOrigin(0.5);
+
+                const skins = [
+                    { key: 'base', name: 'Original', tex: 'player_base_f1' }, // Use frame 1 for static preview
+                    { key: 'gold_hustle', name: 'Gold Hustle', tex: 'player_gold_hustle_f1' },
+                    { key: 'kasi_king', name: 'Kasi King', tex: 'player_kasi_king_f1' }
+                ];
+
+                let startY = 150;
+                skins.forEach((skin) => {
+                    const isUnlocked = gameData.data.unlockedSkins.includes(skin.key);
+                    const isActive = gameData.data.activeSkin === skin.key;
+                    const card = this.add.container(width / 2, startY);
+                    const bg = this.add.rectangle(0, 0, 300, 100, isActive ? 0xff3366 : (isUnlocked ? 0x333333 : 0x1a1a1a)).setInteractive({ useHandCursor: isUnlocked });
+                    if (isActive) bg.setStrokeStyle(4, 0xffffff);
+
+                    const sprite = this.add.sprite(-100, 0, skin.tex).setScale(0.8);
+
+                    // If the skin is unlocked, play the animation on the selection screen!
+                    if (isUnlocked) sprite.play(`skate_${skin.key}`);
+
+                    const txtColor = isUnlocked ? '#ffffff' : '#555555';
+                    card.add([bg, sprite, this.add.text(-40, -15, skin.name, { font: '24px Impact', fill: txtColor }), this.add.text(-40, 15, isActive ? 'EQUIPPED' : (isUnlocked ? 'TAP TO EQUIP' : 'LOCKED'), { font: '14px Arial', fill: isActive ? '#fff' : '#888' })]);
+
+                    if (isUnlocked) bg.on('pointerdown', () => { gameData.setActiveSkin(skin.key); this.scene.restart(); });
+                    startY += 120;
+                });
+
+                const backBg = this.add.rectangle(width / 2, height - 80, 200, 50, 0x222222).setInteractive().setStrokeStyle(2, 0xffffff);
+                this.add.text(width / 2, height - 80, 'BACK', { font: '20px Impact', fill: '#fff' }).setOrigin(0.5);
+                backBg.on('pointerdown', () => this.scene.start('MenuScene'));
+            }
+        }
+
+        class GameScene extends Phaser.Scene {
+            constructor() { super('GameScene'); }
+
+            create() {
+                this.width = this.cameras.main.width; this.height = this.cameras.main.height;
+                this.lanes = [this.width * 0.2, this.width * 0.5, this.width * 0.8];
+                this.currentLane = 1; this.gameSpeed = 5; this.score = 0; this.isGameOver = false;
+
+                this.add.rectangle(0, 0, this.width, this.height, 0x222222).setOrigin(0);
+                this.roadLines = this.add.graphics(); this.lineOffset = 0;
+
+                this.obstacles = this.physics.add.group(); this.collectibles = this.physics.add.group();
+
+                // --- PLAYER ANIMATION SETUP ---
+                const currentSkin = gameData.data.activeSkin;
+                // Start the player with Frame 1 of their active skin
+                this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, `player_${currentSkin}_f1`);
+                this.player.setDepth(10);
+
+                // Play the skating animation immediately!
+                this.player.play(`skate_${currentSkin}`);
+
+                this.player.state = 'skate';
+
+                this.input.on('pointerdown', this.handlePointerDown, this);
+                this.input.on('pointerup', this.handlePointerUp, this);
+                this.scene.launch('UIScene'); this.ui = this.scene.get('UIScene');
+
+                this.obstacleTimer = this.time.addEvent({ delay: 1500, callback: this.spawnObstacle, callbackScope: this, loop: true });
+                this.collectibleTimer = this.time.addEvent({ delay: 2000, callback: this.spawnCollectible, callbackScope: this, loop: true });
+                this.speedTimer = this.time.addEvent({ delay: 10000, callback: () => { this.gameSpeed += 0.5; }, loop: true });
+                this.particles = this.add.particles(0, 0, 'logo', { speed: 100, scale: { start: 0.5, end: 0 }, alpha: { start: 1, end: 0 }, lifespan: 500, emitting: false }).setDepth(20);
+            }
+
+            update(time, delta) {
+                if (this.isGameOver) return;
+                this.score += (this.gameSpeed / 10) * (delta / 16);
+                this.ui.updateScore(Math.floor(this.score));
+
+                this.lineOffset += this.gameSpeed;
+                if (this.lineOffset > 60) this.lineOffset -= 60;
+                this.drawRoadLines();
+
+                this.moveGroup(this.obstacles); this.moveGroup(this.collectibles);
+                this.physics.overlap(this.player, this.obstacles, this.hitObstacle, null, this);
+                this.physics.overlap(this.player, this.collectibles, this.collectItem, null, this);
+            }
+
+            drawRoadLines() {
+                this.roadLines.clear(); this.roadLines.lineStyle(4, 0xffffff, 0.5);
+                for (let y = -60; y < this.height; y += 60) {
+                    this.roadLines.beginPath(); this.roadLines.moveTo(this.width * 0.35, y + this.lineOffset); this.roadLines.lineTo(this.width * 0.35, y + this.lineOffset + 30);
+                    this.roadLines.moveTo(this.width * 0.65, y + this.lineOffset); this.roadLines.lineTo(this.width * 0.65, y + this.lineOffset + 30); this.roadLines.strokePath();
+                }
+            }
+
+            handlePointerDown(pointer) { this.swipeX = pointer.x; this.swipeY = pointer.y; }
+            handlePointerUp(pointer) {
+                if (this.isGameOver) return;
+                const dx = pointer.x - this.swipeX; const dy = pointer.y - this.swipeY; const minSwipe = 30;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > minSwipe) this.changeLane(1); else if (dx < -minSwipe) this.changeLane(-1);
+                } else {
+                    if (dy < -minSwipe) this.jump(); else if (dy > minSwipe) this.slide();
+                }
+            }
+
+            changeLane(dir) {
+                const newLane = this.currentLane + dir;
+                if (newLane >= 0 && newLane < this.lanes.length) {
+                    this.currentLane = newLane;
+                    this.tweens.add({ targets: this.player, x: this.lanes[this.currentLane], duration: 150, ease: 'Sine.easeOut' });
+                }
+            }
+
+            jump() {
+                if (this.player.state !== 'skate') return;
+                this.player.state = 'jump';
+
+                // Pause the skating animation while in the air
+                this.player.anims.pause();
+
+                this.tweens.add({
+                    targets: this.player, scaleX: 1.4, scaleY: 1.4, y: this.player.y - 50, duration: 250, yoyo: true, ease: 'Sine.easeInOut',
+                    onComplete: () => {
+                        this.player.state = 'skate';
+                        this.player.anims.resume(); // Resume skating when landed
+                    }
+                });
+            }
+
+            slide() {
+                if (this.player.state !== 'skate') return;
+                this.player.state = 'slide';
+                this.player.anims.pause(); // Pause animation while sliding
+
+                this.tweens.add({
+                    targets: this.player, scaleY: 0.5, duration: 400, yoyo: true, ease: 'Power2',
+                    onComplete: () => {
+                        this.player.state = 'skate';
+                        this.player.anims.resume();
+                    }
+                });
+            }
+
+            spawnObstacle() {
+                if (this.isGameOver) return;
+                const typeRoll = Phaser.Math.Between(1, 100);
+                let tex = 'taxi', isHigh = false, isLow = false;
+                if (typeRoll < 40) { tex = 'taxi'; } else if (typeRoll < 70) { tex = 'barrier'; isHigh = true; } else { tex = 'pothole'; isLow = true; }
+                const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex);
+                obs.typeData = { tex, isHigh, isLow };
+            }
+            spawnCollectible() {
+                if (this.isGameOver) return;
+                const tex = Phaser.Math.Between(1, 10) > 8 ? 'logo' : 'sneaker';
+                const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex);
+                item.itemType = tex;
+                this.tweens.add({ targets: item, y: item.y - 10, duration: 500, yoyo: true, repeat: -1 });
+            }
+            moveGroup(group) { group.children.iterate((child) => { if (child) { child.y += this.gameSpeed; if (child.y > this.height + 150) child.destroy(); } }); }
+
+            hitObstacle(player, obstacle) {
+                if (obstacle.typeData.isLow && player.state === 'jump') return;
+                if (obstacle.typeData.isHigh && player.state === 'slide') return;
+                this.gameOver();
+            }
+            collectItem(player, item) {
+                if (item.itemType === 'logo') { gameData.addCoins(5); this.ui.showFloatingText('+5 COINS', item.x, item.y, '#ffcc00'); this.particles.emitParticleAt(item.x, item.y, 10); }
+                else { this.score += 50; this.ui.showFloatingText('+50', item.x, item.y, '#00ffcc'); }
+                item.destroy();
+            }
+            gameOver() {
+                this.isGameOver = true; this.physics.pause(); this.obstacleTimer.remove(); this.collectibleTimer.remove(); this.speedTimer.remove();
+
+                // Stop the player animation on death
+                this.player.anims.stop();
+
+                this.cameras.main.shake(300, 0.02);
+                this.tweens.add({ targets: this.add.rectangle(0, 0, this.width, this.height, 0xff0000, 0.5).setOrigin(0), alpha: 0, duration: 500 });
+                setTimeout(() => {
+                    const isHighScore = gameData.updateScore(Math.floor(this.score));
+                    this.scene.stop('UIScene'); this.scene.start('GameOverScene', { score: Math.floor(this.score), isHighScore });
+                }, 1000);
+            }
+        }
+
+        class UIScene extends Phaser.Scene {
+            constructor() { super('UIScene'); }
+            create() {
+                this.scoreText = this.add.text(20, 20, 'SCORE: 0', { font: 'bold 24px Impact', fill: '#fff' }).setShadow(2, 2, '#000', 0);
+                this.coinText = this.add.text(this.cameras.main.width - 20, 20, `COINS: ${gameData.data.coins}`, { font: 'bold 24px Impact', fill: '#ffcc00' }).setOrigin(1, 0).setShadow(2, 2, '#000', 0);
+            }
+            updateScore(val) { this.scoreText.setText(`SCORE: ${val}`); this.coinText.setText(`COINS: ${gameData.data.coins}`); }
+            showFloatingText(msg, x, y, color) {
+                const txt = this.add.text(x, y, msg, { font: 'bold 20px Impact', fill: color }).setOrigin(0.5);
+                this.tweens.add({ targets: txt, y: y - 50, alpha: 0, duration: 800, onComplete: () => txt.destroy() });
+            }
+        }
+
+        class GameOverScene extends Phaser.Scene {
+            constructor() { super('GameOverScene'); }
+            init(data) { this.finalScore = data.score; this.isHighScore = data.isHighScore; }
+            create() {
+                const width = this.cameras.main.width; const height = this.cameras.main.height;
+                this.add.rectangle(0, 0, width, height, 0x111111, 0.9).setOrigin(0);
+                this.add.text(width / 2, height * 0.3, 'WASTED', { font: 'bold 64px Impact', fill: '#ff3366' }).setOrigin(0.5).setShadow(4, 4, '#000', 0);
+                if (this.isHighScore) this.add.text(width / 2, height * 0.4, 'NEW HIGH SCORE!', { font: '24px Impact', fill: '#ffcc00' }).setOrigin(0.5);
+                this.add.text(width / 2, height * 0.45, `SCORE: ${this.finalScore}`, { font: '32px Impact', fill: '#fff' }).setOrigin(0.5);
+                const playBtn = this.add.rectangle(width / 2, height * 0.65, 200, 60, 0xff3366).setInteractive().setStrokeStyle(4, 0xffffff);
+                this.add.text(width / 2, height * 0.65, 'SKATE AGAIN', { font: '24px Impact', fill: '#fff' }).setOrigin(0.5);
+                playBtn.on('pointerdown', () => this.scene.start('GameScene'));
+                const menuBtn = this.add.rectangle(width / 2, height * 0.78, 200, 60, 0x222222).setInteractive().setStrokeStyle(4, 0xffffff);
+                this.add.text(width / 2, height * 0.78, 'MAIN MENU', { font: '24px Impact', fill: '#fff' }).setOrigin(0.5);
+                menuBtn.on('pointerdown', () => this.scene.start('MenuScene'));
+            }
+        }
+
+        window.onload = function () {
+            new Phaser.Game({
+                type: Phaser.AUTO,
+                scale: { mode: Phaser.Scale.RESIZE, parent: 'game-container', width: '100%', height: '100%' },
+                physics: { default: 'arcade', arcade: { debug: false } },
+                backgroundColor: '#111111',
+                scene: [BootScene, MenuScene, SkinScene, GameScene, UIScene, GameOverScene]
+            });
+        };
+    </script>
+</body>
+
+</html>
