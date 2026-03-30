@@ -272,11 +272,11 @@
                 
                 // Scale player to be extremely large and clear, showcasing merch
                 // We bump the size significantly so it renders cleanly and doesn't get softened by the browser downscaling
-                this.player.displayWidth = 135; 
+                this.player.displayWidth = 160; 
                 this.player.scaleY = this.player.scaleX; // Lock aspect ratio so it doesn't look squished/blurry
                 
                 // Keep the physics body tight to the center so standard gameplay isn't broken by a huge visual sprite
-                this.player.body.setSize(this.player.width * 0.4, this.player.height * 0.7);
+                this.player.body.setSize(this.player.width * 0.35, this.player.height * 0.7);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
