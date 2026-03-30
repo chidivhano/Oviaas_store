@@ -81,18 +81,12 @@
             constructor() { super('BootScene'); }
 
             preload() {
-                // ========================================================================
-                // 🏃 HOW TO LOAD YOUR OWN ANIMATED SPRITESHEET 🏃
-                // ========================================================================
-                // 1. Create an image containing your frames side-by-side (e.g., frame 1 is 60x100, frame 2 is 60x100, total image size is 120x100).
-                // 2. Load it as a 'spritesheet' instead of an 'image'.
-                // 3. Uncomment the line below and adjust the frameWidth/Height to match your art.
-
-                // this.load.spritesheet('my_custom_player', 'assets/my_animated_character.png', { frameWidth: 60, frameHeight: 100 });
-
-                // Alternative: If you just have two separate image files (run1.png, run2.png):
-                // this.load.image('run_frame_1', 'assets/run1.png');
-                // this.load.image('run_frame_2', 'assets/run2.png');
+                // Load Custom Assets from the corrected 'assets' folder
+                this.load.image('player_body', '../assets/charecter_2.png');
+                this.load.image('obs_taxi', '../assets/gusheshe.png');
+                this.load.image('obs_gusheshe_2', '../assets/gusheshe_2.png');
+                this.load.image('col_coin', '../assets/Oviaas_Coin.png');
+                this.load.image('col_logo', '../assets/Oviaas_Logo.jpeg');
             }
 
             create() {
@@ -202,7 +196,7 @@
 
                 this.add.text(width / 2, height * 0.10, 'PRESENTED BY OBVIOUS STUDIOS', { font: 'bold 16px Arial', fill: '#ffcc00', letterSpacing: 2 }).setOrigin(0.5);
                 this.add.text(width / 2, height * 0.17, 'SOWETO', { font: 'bold 64px Impact', fill: '#ff3366' }).setOrigin(0.5).setShadow(3, 3, '#000', 0);
-                this.add.text(width / 2, height * 0.25, 'KING', { font: 'bold 80px Impact', fill: '#ffffff' }).setOrigin(0.5).setShadow(4, 4, '#ffcc00', 0);
+                this.add.text(width / 2, height * 0.25, 'SKATE', { font: 'bold 80px Impact', fill: '#ffffff' }).setOrigin(0.5).setShadow(4, 4, '#ffcc00', 0);
                 this.add.text(width / 2, height * 0.38, `HIGH SCORE: ${gameData.data.highScore}`, { font: '24px Impact', fill: '#aaa' }).setOrigin(0.5);
                 this.add.text(width / 2, height * 0.43, `COINS: ${gameData.data.coins}`, { font: '24px Impact', fill: '#ffcc00' }).setOrigin(0.5);
 
@@ -278,13 +272,14 @@
                 this.obstacles = this.physics.add.group(); this.collectibles = this.physics.add.group();
 
                 // --- PLAYER ANIMATION SETUP ---
-                const currentSkin = gameData.data.activeSkin;
-                // Start the player with Frame 1 of their active skin
-                this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, `player_${currentSkin}_f1`);
+                // Start the player with the custom asset
+                this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, 'player_body');
                 this.player.setDepth(10);
+                this.player.setScale(0.8); // Adjust scale for the image
 
-                // Play the skating animation immediately!
-                this.player.play(`skate_${currentSkin}`);
+                // If animations are needed for the image, they would be defined here
+                // For now, we use a static image
+                // this.player.play(`skate_${currentSkin}`);
 
                 this.player.state = 'skate';
 
@@ -372,15 +367,23 @@
             spawnObstacle() {
                 if (this.isGameOver) return;
                 const typeRoll = Phaser.Math.Between(1, 100);
-                let tex = 'taxi', isHigh = false, isLow = false;
-                if (typeRoll < 40) { tex = 'taxi'; } else if (typeRoll < 70) { tex = 'barrier'; isHigh = true; } else { tex = 'pothole'; isLow = true; }
-                const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex);
+                let tex = 'obs_taxi', isHigh = false, isLow = false;
+                if (typeRoll < 40) { 
+                    tex = 'obs_taxi'; 
+                } else if (typeRoll < 70) { 
+                    tex = 'obs_gusheshe_2'; // High obstacle
+                    isHigh = true; 
+                } else { 
+                    tex = 'pothole'; // Reverting to generated texture for missing assets
+                    isLow = true; 
+                }
+                const obs = this.obstacles.create(this.lanes[Phaser.Math.Between(0, 2)], -100, tex).setScale(0.7);
                 obs.typeData = { tex, isHigh, isLow };
             }
             spawnCollectible() {
                 if (this.isGameOver) return;
-                const tex = Phaser.Math.Between(1, 10) > 8 ? 'logo' : 'sneaker';
-                const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex);
+                const tex = Phaser.Math.Between(1, 10) > 8 ? 'col_logo' : 'col_coin';
+                const item = this.collectibles.create(this.lanes[Phaser.Math.Between(0, 2)], -50, tex).setScale(0.5);
                 item.itemType = tex;
                 this.tweens.add({ targets: item, y: item.y - 10, duration: 500, yoyo: true, repeat: -1 });
             }
