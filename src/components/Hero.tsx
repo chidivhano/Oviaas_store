@@ -23,7 +23,7 @@ export default function Hero({ onEnter }: { onEnter: () => void }) {
         >
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-2">
             <img 
-              src="/Oviaas_Logo.jpeg" 
+              src={`${import.meta.env.BASE_URL}Oviaas_Logo.jpeg`} 
               alt="Oviaas Logo" 
               className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-2 border-[#b026ff] neon-box-purple"
               referrerPolicy="no-referrer"

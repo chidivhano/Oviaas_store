@@ -15,11 +15,11 @@ const content = {
     { id: 3, title: 'Cyberpunk 2077 x Oviaas', duration: '05:15', image: 'https://picsum.photos/seed/movie_cyber/800/450' },
   ],
   games: [
-    { id: 1, title: 'Gusheshe Drift', genre: 'Racing', image: '/gusheshe.png' },
-    { id: 2, title: 'Neon Character', genre: 'Action', image: '/charecter.png' },
-    { id: 3, title: 'Oviaas Coin Rush', genre: 'Arcade', image: '/Oviaas_Coin.png' },
-    { id: 4, title: 'Gusheshe Night', genre: 'Racing', image: '/gusheshe_2.png' },
-    { id: 5, title: 'Cyber Character', genre: 'Action', image: '/charecter_2.png' },
+    { id: 1, title: 'Gusheshe Drift', genre: 'Racing', image: `${import.meta.env.BASE_URL}gusheshe.png` },
+    { id: 2, title: 'Neon Character', genre: 'Action', image: `${import.meta.env.BASE_URL}charecter.png` },
+    { id: 3, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}Oviaas_Coin.png` },
+    { id: 4, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}gusheshe_2.png` },
+    { id: 5, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}charecter_2.png` },
   ],
   music: [
     { id: 1, title: 'Oviaas Vol. 1', artist: 'Various Artists', image: 'https://picsum.photos/seed/music_vol1/500/500' },
