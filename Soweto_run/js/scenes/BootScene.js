@@ -61,7 +61,7 @@ export default class BootScene extends Phaser.Scene {
         logoGraphics.fillStyle(0xffffff, 1);
         logoGraphics.fillCircle(15, 15, 15);
         logoGraphics.fillStyle(0x000000, 1);
-        logoGraphics.fillText("O.S", 4, 10, '14px Outfit', 'bold');
+        logoGraphics.fillCircle(15, 15, 6); // Add an inner black dot instead of invalid text
         logoGraphics.generateTexture('logo', 30, 30);
 
         // UI Background
