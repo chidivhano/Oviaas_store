@@ -25,7 +25,7 @@ export default function Navigation({ onCartClick, activeSection, onNavigate }: N
       {/* Logo */}
       <div className="pointer-events-auto cursor-pointer flex items-center gap-3">
         <img 
-          src={`${import.meta.env.BASE_URL}Oviaas_Logo.jpeg`} 
+          src={`${import.meta.env.BASE_URL}assets/Oviaas_Logo.jpeg`} 
           alt="Oviaas Logo" 
           className="w-10 h-10 rounded-full object-cover border border-[#b026ff] neon-box-purple"
           referrerPolicy="no-referrer"

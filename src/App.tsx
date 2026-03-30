@@ -113,7 +113,7 @@ export default function App() {
             <footer className="w-full py-12 border-t border-white/10 text-center flex flex-col items-center">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <img 
-                  src={`${import.meta.env.BASE_URL}Oviaas_Logo.jpeg`} 
+                  src={`${import.meta.env.BASE_URL}assets/Oviaas_Logo.jpeg`} 
                   alt="Oviaas Logo" 
                   loading="lazy"
                   decoding="async"
