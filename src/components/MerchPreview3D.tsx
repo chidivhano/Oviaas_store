@@ -213,9 +213,9 @@ export default function MerchPreview3D() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative w-full max-w-5xl mx-auto"
+          className="relative w-full mx-auto"
         >
-          <div className="relative aspect-[4/3] md:aspect-[16/10] rounded-3xl overflow-hidden glass-panel border border-white/10">
+          <div className="relative aspect-[3/4] sm:aspect-[3/4] md:aspect-[4/3] lg:aspect-[16/10] rounded-3xl overflow-hidden glass-panel border border-white/10">
             <Scene isPlaying={isPlaying} />
 
             {/* Play/Pause button */}
