@@ -473,9 +473,20 @@
         window.onload = function () {
             new Phaser.Game({
                 type: Phaser.AUTO,
-                scale: { mode: Phaser.Scale.RESIZE, parent: 'game-container', width: '100%', height: '100%' },
+                scale: { 
+                    mode: Phaser.Scale.RESIZE, 
+                    parent: 'game-container', 
+                    width: '100%', 
+                    height: '100%',
+                    autoCenter: Phaser.Scale.CENTER_BOTH
+                },
                 physics: { default: 'arcade', arcade: { debug: false } },
                 backgroundColor: '#111111',
+                render: { 
+                    antialias: true, 
+                    roundPixels: true,
+                    pixelArt: false // We want smooth scaling for the high-res apparel graphics
+                },
                 scene: [BootScene, MenuScene, SkinScene, GameScene, UIScene, GameOverScene]
             });
         };

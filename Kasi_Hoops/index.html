@@ -271,6 +271,18 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Logic dimensions (fixed internal resolution)
+        const GAME_WIDTH = 1000;
+        const GAME_HEIGHT = 600;
+
+        // High-DPI (Retina) Scaling Support
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = GAME_WIDTH * dpr;
+        canvas.height = GAME_HEIGHT * dpr;
+        canvas.style.width = `${GAME_WIDTH}px`;
+        canvas.style.height = `${GAME_HEIGHT}px`;
+        ctx.scale(dpr, dpr); // Scale all drawing commands by the pixel ratio for clarity
+
         // UI Elements
         const mainMenu = document.getElementById('main-menu');
         const gameOverScreen = document.getElementById('game-over');
@@ -281,10 +293,6 @@
         const finalScoreDisplay = document.getElementById('finalScore');
         const modeLabel = document.getElementById('modeLabel');
         const messageArea = document.getElementById('messageArea');
-
-        // Logical dimensions (fixed internal resolution)
-        const GAME_WIDTH = 1000;
-        const GAME_HEIGHT = 600;
 
         let gameState = 'menu'; // menu, playing, gameover
         let gameMode = 'arcade'; // arcade, time
