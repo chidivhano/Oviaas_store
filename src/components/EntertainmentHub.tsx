@@ -21,6 +21,7 @@ const content = {
     { id: 4, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}assets/Oviaas_Coin.png` },
     { id: 5, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}assets/gusheshe_2.png` },
     { id: 6, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter_2.png` },
+    { id: 7, title: 'Drip Builder', genre: 'Customization', image: `${import.meta.env.BASE_URL}assets/charecter.png`, gamePath: `${import.meta.env.BASE_URL}Drip_Builder/index.html` },
   ],
   music: [
     { id: 1, title: 'Oviaas Vol. 1', artist: 'Various Artists', image: 'https://picsum.photos/seed/music_vol1/500/500' },
