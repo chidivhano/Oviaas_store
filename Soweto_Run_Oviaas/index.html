@@ -235,10 +235,13 @@
                     const bg = this.add.rectangle(0, 0, 300, 100, isActive ? 0xff3366 : 0x333333).setInteractive({ useHandCursor: true });
                     if (isActive) bg.setStrokeStyle(4, 0xffffff);
 
-                    const sprite = this.add.sprite(-100, 0, skin.tex).setScale(0.8);
+                    const sprite = this.add.sprite(-100, 0, skin.tex);
+                    sprite.displayWidth = 65;
+                    sprite.scaleY = sprite.scaleX;
 
                     // If the skin is unlocked, play the animation on the selection screen!
-                    if (isUnlocked) sprite.play(`skate_${skin.key}`);
+                    // Static display
+                    // if (isUnlocked) sprite.play(`skate_${skin.key}`);
 
                     card.add([bg, sprite, this.add.text(-40, -15, skin.name, { font: '24px Impact', fill: '#ffffff' }), this.add.text(-40, 15, isActive ? 'EQUIPPED' : 'TAP TO EQUIP', { font: '14px Arial', fill: isActive ? '#fff' : '#888' })]);
 
@@ -270,13 +273,13 @@
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, currentSkin);
                 this.player.setDepth(10);
                 
-                // Scale player to be extremely large and clear, showcasing merch
-                // We bump the size significantly so it renders cleanly and doesn't get softened by the browser downscaling
-                this.player.displayWidth = 160; 
-                this.player.scaleY = this.player.scaleX; // Lock aspect ratio so it doesn't look squished/blurry
+                // Scale player to be significantly larger and clearer, showcasing brand apparel
+                // We've jumped to 200px to avoid blurriness and capture maximal texture detail
+                this.player.displayWidth = 200; 
+                this.player.scaleY = this.player.scaleX; 
                 
-                // Keep the physics body tight to the center so standard gameplay isn't broken by a huge visual sprite
-                this.player.body.setSize(this.player.width * 0.35, this.player.height * 0.7);
+                // Tighten physics body to ensure fair gameplay with the larger character
+                this.player.body.setSize(this.player.width * 0.3, this.player.height * 0.6);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
