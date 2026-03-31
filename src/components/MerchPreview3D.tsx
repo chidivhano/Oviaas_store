@@ -104,7 +104,7 @@ function Particles() {
 function Scene({ isPlaying }: { isPlaying: boolean }) {
   return (
     <Canvas
-      camera={{ position: [0, 1, 6], fov: 35 }}
+      camera={{ position: [0, 1, 10], fov: 35 }}
       style={{ width: '100%', height: '100%' }}
       gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
       shadows
@@ -158,8 +158,8 @@ function Scene({ isPlaying }: { isPlaying: boolean }) {
       <OrbitControls
         enableZoom={true}
         enablePan={false}
-        minDistance={3}
-        maxDistance={12}
+        minDistance={5}
+        maxDistance={16}
         autoRotate
         autoRotateSpeed={1.5}
         maxPolarAngle={Math.PI * 0.8}
