@@ -32,13 +32,6 @@ const BASE = import.meta.env.BASE_URL + 'Drip_Builder/';
 //    Shorts hem          ≈ 72% from top
 //    Avatar shoulder w   ≈ 66% of container width
 //
-//  Female avatar (PNG ~0.72:1 w:h ratio — wider relative to height):
-//    Collar/shirt-start  ≈ 23% from top
-//    Shirt hem / waist   ≈ 56% from top
-//    Shorts waist        ≈ 53% from top
-//    Shorts hem          ≈ 72% from top
-//    Avatar shoulder w   ≈ 58% of container width
-//
 //  The clothing PNGs have ~5% transparent padding on each side.
 //  We therefore add ~10% extra width so the garment fills to the body edge.
 // ==========================================
@@ -57,8 +50,7 @@ interface ClothingItem {
   image: string;
   isLocked: boolean;
   code?: string;
-  styleM: ClothingStyle;   // male overlay
-  styleF: ClothingStyle;   // female overlay
+  style: ClothingStyle;   // Male overlay primarily used now
 }
 
 const CLOTHING_DB: ClothingItem[] = [
@@ -69,10 +61,7 @@ const CLOTHING_DB: ClothingItem[] = [
     name: 'Oviäas Black Tee',
     image: BASE + 'ovs_black_tee.png',
     isLocked: false,
-    // Male: tee collar at ~20%, shoulder-to-shoulder ~66% → image 76%
-    styleM: { top: '19%', left: '50%', width: '76%', transform: 'translateX(-50%)' },
-    // Female: slightly narrower shoulders, starts slightly lower
-    styleF: { top: '22%', left: '50%', width: '68%', transform: 'translateX(-50%)' },
+    style: { top: '20%', left: '50%', width: '65%', transform: 'translateX(-50%)' },
   },
   {
     id: 't_white_tee',
@@ -80,8 +69,7 @@ const CLOTHING_DB: ClothingItem[] = [
     name: 'Oviäas White Tee',
     image: BASE + 'ovs_white_tee.png',
     isLocked: false,
-    styleM: { top: '19%', left: '50%', width: '76%', transform: 'translateX(-50%)' },
-    styleF: { top: '22%', left: '50%', width: '68%', transform: 'translateX(-50%)' },
+    style: { top: '20%', left: '50%', width: '65%', transform: 'translateX(-50%)' },
   },
   {
     id: 't_black_hoodie',
@@ -90,8 +78,7 @@ const CLOTHING_DB: ClothingItem[] = [
     image: BASE + 'ovs_black_hoodie.png',
     isLocked: false,
     // Hoodie is shorter-sleeve / boxier — sits a touch higher, slightly wider
-    styleM: { top: '17%', left: '50%', width: '82%', transform: 'translateX(-50%)' },
-    styleF: { top: '20%', left: '50%', width: '72%', transform: 'translateX(-50%)' },
+    style: { top: '18%', left: '50%', width: '72%', transform: 'translateX(-50%)' },
   },
   {
     id: 't_white_hoodie',
@@ -101,8 +88,7 @@ const CLOTHING_DB: ClothingItem[] = [
     isLocked: true,
     code: 'SOWETO26',
     // Full pullover hoodie — widest (long arms visible)
-    styleM: { top: '15%', left: '50%', width: '88%', transform: 'translateX(-50%)' },
-    styleF: { top: '18%', left: '50%', width: '78%', transform: 'translateX(-50%)' },
+    style: { top: '16%', left: '50%', width: '76%', transform: 'translateX(-50%)' },
   },
 
   // ── BOTTOMS ───────────────────────────────────────────────────────────────
@@ -113,8 +99,7 @@ const CLOTHING_DB: ClothingItem[] = [
     image: BASE + 'ovs_shorts.png',
     isLocked: false,
     // Shorts PNG is wider than tall (landscape-ish).  Male hip ~55% container W.
-    styleM: { top: '49%', left: '50%', width: '66%', transform: 'translateX(-50%)' },
-    styleF: { top: '52%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
+    style: { top: '44%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
   },
   {
     id: 'b_pitbul_shorts',
@@ -122,8 +107,7 @@ const CLOTHING_DB: ClothingItem[] = [
     name: 'OVS Pitbul Shorts',
     image: BASE + 'ovs_pitbul_shorts.png',
     isLocked: false,
-    styleM: { top: '49%', left: '50%', width: '66%', transform: 'translateX(-50%)' },
-    styleF: { top: '52%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
+    style: { top: '44%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
   },
 ];
 
@@ -161,17 +145,12 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (v: T | ((prev: T
 // are measured from the SAME origin as the avatar image.
 // ==========================================
 interface OutfitState {
-  avatar: 'male' | 'female';
   top: ClothingItem | null;
   bottom: ClothingItem | null;
 }
 
 const AvatarViewer = ({ outfit }: { outfit: OutfitState }) => {
-  const isFemale = outfit.avatar === 'female';
-  const avatarSrc = isFemale ? BASE + 'ovs_female.png' : BASE + 'ovs_male.png';
-
-  const getStyle = (item: ClothingItem): ClothingStyle =>
-    isFemale ? item.styleF : item.styleM;
+  const avatarSrc = BASE + 'ovs_male.png';
 
   return (
     // This `relative` div IS the positioning context for everything.
@@ -191,15 +170,7 @@ const AvatarViewer = ({ outfit }: { outfit: OutfitState }) => {
       <AnimatePresence>
         {outfit.bottom && (
           <motion.img
-            key={`bottom-${outfit.bottom.id}-${outfit.avatar}`}
-            src={outfit.bottom.image}
-            alt={outfit.bottom.name}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute object-contain select-none pointer-events-none"
-            style={getStyle(outfit.bottom) as React.CSSProperties}
+            style={outfit.bottom.style as React.CSSProperties}
             draggable={false}
           />
         )}
@@ -209,15 +180,7 @@ const AvatarViewer = ({ outfit }: { outfit: OutfitState }) => {
       <AnimatePresence>
         {outfit.top && (
           <motion.img
-            key={`top-${outfit.top.id}-${outfit.avatar}`}
-            src={outfit.top.image}
-            alt={outfit.top.name}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute object-contain select-none pointer-events-none"
-            style={getStyle(outfit.top) as React.CSSProperties}
+            style={outfit.top.style as React.CSSProperties}
             draggable={false}
           />
         )}
@@ -289,7 +252,6 @@ const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutf
   const isChallenge = context?.mode === 'challenge';
 
   const [outfit, setOutfit] = useState<OutfitState>({
-    avatar: 'male',
     top: CLOTHING_DB.find(i => i.id === 't_black_tee') ?? null,
     bottom: CLOTHING_DB.find(i => i.id === 'b_shorts') ?? null,
   });
@@ -366,16 +328,7 @@ const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutf
             <AvatarViewer outfit={outfit} />
           </div>
 
-          {/* Gender toggle */}
-          <div className="absolute bottom-4 right-3 flex gap-2 z-20">
-            {(['male', 'female'] as const).map(g => (
-              <button key={g}
-                onClick={() => setOutfit(p => ({ ...p, avatar: g }))}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow
-                  ${outfit.avatar === g ? 'bg-orange-500 text-black' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
-              >{g}</button>
-            ))}
-          </div>
+          {/* Avatar Panel is now male-only */}
         </div>
 
         {/* ── Wardrobe Panel ── */}
