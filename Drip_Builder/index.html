@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OVS Studios | Drip Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ovs: {
+                            sand: '#E6DCC8',
+                            earth: '#A67C52',
+                            clay: '#C25A3C',
+                            olive: '#4A5D23',
+                            charcoal: '#2D2D2A',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #2D2D2A; /* ovs-charcoal */
+            touch-action: none;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #3a3a36 0%, #1a1a18 100%);
+        }
+
+        canvas {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(45, 45, 42, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .hidden { display: none !important; }
+
+        .btn-ovs {
+            background-color: #C25A3C;
+            color: #E6DCC8;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 1rem 2.5rem;
+            border-radius: 0.5rem;
+            letter-spacing: 0.1em;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-ovs:hover {
+            background-color: #A67C52;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud-text {
+            color: #E6DCC8;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="overlay">
+            <div class="text-center mb-8">
+                <h2 class="text-ovs-earth font-bold tracking-[0.3em] uppercase text-sm mb-2">Presents</h2>
+                <h1 class="text-6xl md:text-8xl font-black text-ovs-sand mb-2 drop-shadow-lg italic">DRIP BUILDER</h1>
+                <p class="text-ovs-clay font-bold tracking-widest uppercase mt-4">By OVS Studios</p>
+            </div>
+
+            <div class="flex flex-col gap-4 w-64">
+                <button class="btn-ovs" onclick="startGame()">Start Customizing</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High-DPI (Retina) Scaling Support
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const GAME_WIDTH = 1000;
+        const GAME_HEIGHT = 600;
+        const dpr = window.devicePixelRatio || 1;
+        
+        canvas.width = GAME_WIDTH * dpr;
+        canvas.height = GAME_HEIGHT * dpr;
+        canvas.style.width = `${GAME_WIDTH}px`;
+        canvas.style.height = `${GAME_HEIGHT}px`;
+        ctx.scale(dpr, dpr);
+
+        function startGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            // Drip Builder logic will be added here
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            // Draw background or placeholders here
+            ctx.fillStyle = '#E6DCC8';
+            ctx.font = 'bold 30px Montserrat';
+            ctx.fillText('Drip Builder Coming Soon...', 100, 100);
+        }
+
+        function gameLoop() {
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
