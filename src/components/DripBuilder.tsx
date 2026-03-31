@@ -55,14 +55,14 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'top',
     name: 'Oviäas Black Tee',
     image: BASE + 'ovs_black_tee.png',
-    style: { top: '20%', left: '50%', width: '65%', transform: 'translateX(-50%)' },
+    style: { top: '20%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
   },
   {
     id: 't_white_tee',
     category: 'top',
     name: 'Oviäas White Tee',
     image: BASE + 'ovs_white_tee.png',
-    style: { top: '20%', left: '50%', width: '65%', transform: 'translateX(-50%)' },
+    style: { top: '20%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
   },
   {
     id: 't_black_hoodie',

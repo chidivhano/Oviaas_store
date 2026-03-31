@@ -5,6 +5,7 @@ import Navigation from './components/Navigation';
 import Cart from './components/Cart';
 
 const Showroom = lazy(() => import('./components/Showroom'));
+const MerchPreview3D = lazy(() => import('./components/MerchPreview3D'));
 const Collections = lazy(() => import('./components/Collections'));
 const EntertainmentHub = lazy(() => import('./components/EntertainmentHub'));
 const BrandStory = lazy(() => import('./components/BrandStory'));
@@ -92,6 +93,8 @@ export default function App() {
                 <section ref={showroomRef} id="showroom">
                   <Showroom />
                 </section>
+
+                <MerchPreview3D />
                 
                 <BrandStory />
                 
