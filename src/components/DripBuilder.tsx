@@ -2,14 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shirt,
-  Trophy,
   Image as ImageIcon,
-  Unlock,
   X,
   Check,
   Heart,
   Share2,
-  Lock,
   Save,
   Sparkles,
   ChevronLeft,
@@ -48,8 +45,6 @@ interface ClothingItem {
   category: 'top' | 'bottom';
   name: string;
   image: string;
-  isLocked: boolean;
-  code?: string;
   style: ClothingStyle;   // Male overlay primarily used now
 }
 
@@ -60,7 +55,6 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'top',
     name: 'Oviäas Black Tee',
     image: BASE + 'ovs_black_tee.png',
-    isLocked: false,
     style: { top: '20%', left: '50%', width: '65%', transform: 'translateX(-50%)' },
   },
   {
@@ -68,7 +62,6 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'top',
     name: 'Oviäas White Tee',
     image: BASE + 'ovs_white_tee.png',
-    isLocked: false,
     style: { top: '20%', left: '50%', width: '65%', transform: 'translateX(-50%)' },
   },
   {
@@ -76,7 +69,6 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'top',
     name: 'Oviaas Black Hoodie',
     image: BASE + 'ovs_black_hoodie.png',
-    isLocked: false,
     // Hoodie is shorter-sleeve / boxier — sits a touch higher, slightly wider
     style: { top: '18%', left: '50%', width: '72%', transform: 'translateX(-50%)' },
   },
@@ -85,8 +77,6 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'top',
     name: 'OVS White Hoodie',
     image: BASE + 'ovs_white_hoodie.png',
-    isLocked: true,
-    code: 'SOWETO26',
     // Full pullover hoodie — widest (long arms visible)
     style: { top: '16%', left: '50%', width: '76%', transform: 'translateX(-50%)' },
   },
@@ -97,7 +87,6 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'bottom',
     name: 'Oviaas Lifestyle Shorts',
     image: BASE + 'ovs_shorts.png',
-    isLocked: false,
     // Shorts PNG is wider than tall (landscape-ish).  Male hip ~55% container W.
     style: { top: '44%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
   },
@@ -106,18 +95,10 @@ const CLOTHING_DB: ClothingItem[] = [
     category: 'bottom',
     name: 'OVS Pitbul Shorts',
     image: BASE + 'ovs_pitbul_shorts.png',
-    isLocked: false,
     style: { top: '44%', left: '50%', width: '60%', transform: 'translateX(-50%)' },
   },
 ];
 
-const INITIAL_INVENTORY: string[] = CLOTHING_DB.filter(i => !i.isLocked).map(i => i.id);
-
-const CHALLENGES = [
-  { id: 'c1', title: 'Campus Fit', desc: 'Build the ultimate first-day-of-class drip. Keep it clean, keep it loud.', reward: 'Unlock: OVS White Hoodie (code: SOWETO26)' },
-  { id: 'c2', title: 'Kasi Flex', desc: 'Weekend in the township. Comfort meets pure street culture.', reward: 'Unlock: Pitbul Shorts' },
-  { id: 'c3', title: 'First Date', desc: 'Impress them before you even speak. Sophisticated streetwear.', reward: 'Unlock: OVS White Hoodie (code: SOWETO26)' },
-];
 
 // ==========================================
 // 3. HOOKS
@@ -170,6 +151,14 @@ const AvatarViewer = ({ outfit }: { outfit: OutfitState }) => {
       <AnimatePresence>
         {outfit.bottom && (
           <motion.img
+            key={`bottom-${outfit.bottom.id}`}
+            src={outfit.bottom.image}
+            alt={outfit.bottom.name}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute object-contain select-none pointer-events-none"
             style={outfit.bottom.style as React.CSSProperties}
             draggable={false}
           />
@@ -180,6 +169,14 @@ const AvatarViewer = ({ outfit }: { outfit: OutfitState }) => {
       <AnimatePresence>
         {outfit.top && (
           <motion.img
+            key={`top-${outfit.top.id}`}
+            src={outfit.top.image}
+            alt={outfit.top.name}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute object-contain select-none pointer-events-none"
             style={outfit.top.style as React.CSSProperties}
             draggable={false}
           />
@@ -236,56 +233,36 @@ const HomeScreen = ({ onNavigate }: { onNavigate: (s: string, ctx?: any) => void
         <h1 className="text-5xl sm:text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none mb-6 drop-shadow-2xl">
           DRIP<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-300">BUILDER</span>
         </h1>
-        <p className="text-zinc-400 text-lg md:text-xl font-medium max-w-md mx-auto">Design your fit. Unlock exclusive digital merch. Rule the streets.</p>
+        <p className="text-zinc-400 text-lg md:text-xl font-medium max-w-md mx-auto">Design your fit. Build your drip. Rule the streets.</p>
       </motion.div>
       <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="flex flex-col gap-4 w-full">
         <Btn onClick={() => onNavigate('builder', { mode: 'freestyle' })} className="w-full text-xl py-4"><Shirt size={24} /> Free Style Mode</Btn>
-        <Btn onClick={() => onNavigate('challenges')} variant="outline" className="w-full text-xl py-4"><Trophy size={24} /> Daily Challenges</Btn>
-        <Btn onClick={() => onNavigate('gallery')} variant="ghost" className="w-full text-lg py-4"><ImageIcon size={20} /> Community Gallery</Btn>
+        <Btn onClick={() => onNavigate('gallery')} variant="outline" className="w-full text-lg py-4"><ImageIcon size={20} /> Community Gallery</Btn>
       </motion.div>
     </div>
   </motion.div>
 );
 
 /* ── Builder ──────────────────────────── */
-const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutfits, setSavedOutfits, showToast }: any) => {
-  const isChallenge = context?.mode === 'challenge';
-
+const BuilderScreen = ({ onNavigate, savedOutfits, setSavedOutfits, showToast }: any) => {
   const [outfit, setOutfit] = useState<OutfitState>({
     top: CLOTHING_DB.find(i => i.id === 't_black_tee') ?? null,
     bottom: CLOTHING_DB.find(i => i.id === 'b_shorts') ?? null,
   });
   const [activeCategory, setActiveCategory] = useState<'top' | 'bottom'>('top');
-  const [showUnlockModal, setShowUnlockModal] = useState(false);
-  const [unlockCode, setUnlockCode] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const adj = ['Kasi', 'Urban', 'Midnight', 'Neon', 'Concrete', 'Soweto', 'Retro', 'Future'];
   const nou = ['Drip', 'Flex', 'Steez', 'Vibe', 'Flow', 'Wave', 'Edition', 'Uniform'];
   const [outfitName, setOutfitName] = useState(() => `${adj[Math.floor(Math.random() * adj.length)]} ${nou[Math.floor(Math.random() * nou.length)]}`);
 
   const handleEquip = (item: ClothingItem) => {
-    if (item.isLocked && !inventory.includes(item.id)) { setShowUnlockModal(true); return; }
     setOutfit(p => ({ ...p, [item.category]: item }));
-  };
-
-  const handleUnlock = () => {
-    const found = CLOTHING_DB.find(i => i.code === unlockCode.toUpperCase());
-    if (found) {
-      if (inventory.includes(found.id)) { showToast('You already own this!'); }
-      else {
-        setInventory((p: string[]) => [...p, found.id]);
-        setOutfit(p => ({ ...p, [found.category]: found }));
-        showToast(`Unlocked: ${found.name}! 🎉`, 'success');
-      }
-      setShowUnlockModal(false); setUnlockCode('');
-    } else { showToast('Invalid code. Try again.', 'error'); }
   };
 
   const handleSave = () => {
     setSavedOutfits((p: any[]) => [{ id: Date.now().toString(), name: outfitName, outfit, likes: 0, date: new Date().toISOString() }, ...p]);
     setShowSaveModal(false);
     showToast('Fit saved to your gallery!', 'success');
-    if (isChallenge) onNavigate('home');
   };
 
   const filteredItems = CLOTHING_DB.filter(i => i.category === activeCategory);
@@ -299,8 +276,7 @@ const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutf
         <div className="flex items-center gap-3">
           <button onClick={() => onNavigate('home')} className="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"><ChevronLeft size={20} /></button>
           <div className="min-w-0">
-            <h1 className="font-black uppercase tracking-tight text-lg leading-none truncate">{isChallenge ? 'Challenge Mode' : 'Drip Builder'}</h1>
-            {isChallenge && <p className="text-orange-500 text-xs font-bold truncate">{context.challenge.title}</p>}
+            <h1 className="font-black uppercase tracking-tight text-lg leading-none truncate">Drip Builder</h1>
           </div>
         </div>
         <Btn onClick={() => setShowSaveModal(true)} className="px-3 py-2 text-xs sm:text-sm whitespace-nowrap">
@@ -351,20 +327,17 @@ const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutf
           {/* Items grid */}
           <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4 pb-24 content-start">
             {filteredItems.map(item => {
-              const unlocked = !item.isLocked || inventory.includes(item.id);
               const active = outfit[item.category]?.id === item.id;
               return (
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} key={item.id}
                   onClick={() => handleEquip(item)}
                   className={`relative rounded-2xl flex flex-col items-center gap-0 transition-all border-2 overflow-hidden
-                    ${active ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'}
-                    ${!unlocked ? 'opacity-60 grayscale' : ''}`}>
+                    ${active ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-600'}`}>
                   {/* Thumbnail */}
                   <div className="w-full aspect-square bg-zinc-800 flex items-center justify-center overflow-hidden rounded-xl">
                     <img src={item.image} alt={item.name} className="w-[85%] h-[85%] object-contain" loading="lazy" />
                   </div>
                   <p className="px-3 py-3 font-bold text-xs text-center uppercase tracking-tight leading-tight">{item.name}</p>
-                  {!unlocked && <div className="absolute top-2 right-2 bg-zinc-950 p-1.5 rounded-full border border-zinc-700"><Lock size={12} className="text-zinc-400" /></div>}
                   {active && <div className="absolute top-2 right-2 bg-orange-500 p-1.5 rounded-full text-black"><Check size={12} /></div>}
                 </motion.button>
               );
@@ -379,24 +352,9 @@ const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutf
               <X size={28} /><p className="font-bold text-xs uppercase">Remove</p>
             </motion.button>
           </div>
-
-          {/* Code unlock footer */}
-          <div className="flex-none p-4 bg-zinc-900 border-t border-zinc-800">
-            <Btn onClick={() => setShowUnlockModal(true)} variant="outline" className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10">
-              <Unlock size={18} /> Enter Merch Code
-            </Btn>
-          </div>
         </div>
       </div>
 
-      {/* Unlock Modal */}
-      <Modal isOpen={showUnlockModal} onClose={() => setShowUnlockModal(false)} title="Unlock Exclusive Merch">
-        <p className="text-zinc-400 mb-6">Bought something from Oviaas? Enter the code on the tag to unlock it in-game.</p>
-        <input type="text" value={unlockCode} onChange={e => setUnlockCode(e.target.value)}
-          placeholder="ENTER CODE"
-          className="w-full bg-zinc-950 border-2 border-zinc-700 rounded-xl px-4 py-4 text-white text-center text-xl font-black uppercase tracking-widest focus:outline-none focus:border-orange-500 transition-colors mb-4" />
-        <Btn onClick={handleUnlock} className="w-full py-4">Unlock Item</Btn>
-      </Modal>
 
       {/* Save Modal */}
       <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)} title="Save Your Fit">
@@ -415,33 +373,7 @@ const BuilderScreen = ({ onNavigate, context, inventory, setInventory, savedOutf
   );
 };
 
-/* ── Challenges ───────────────────────── */
-const ChallengesScreen = ({ onNavigate }: any) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    className="min-h-screen bg-zinc-950 text-white p-6 pb-20">
-    <header className="flex items-center gap-4 mb-8 pt-4">
-      <button onClick={() => onNavigate('home')} className="p-2 bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors"><ChevronLeft size={24} /></button>
-      <h1 className="text-3xl font-black uppercase tracking-tighter">Challenges</h1>
-    </header>
-    <div className="max-w-2xl mx-auto space-y-4">
-      {CHALLENGES.map(c => (
-        <motion.div key={c.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={() => onNavigate('builder', { mode: 'challenge', challenge: c })}
-          className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 cursor-pointer relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <h2 className="text-2xl font-black uppercase tracking-tight">{c.title}</h2>
-            <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800 text-orange-500"><Trophy size={20} /></div>
-          </div>
-          <p className="text-zinc-400 mb-6 relative z-10">{c.desc}</p>
-          <div className="flex items-center gap-2 text-sm font-bold text-orange-400 bg-orange-500/10 w-max px-3 py-1.5 rounded-full relative z-10">
-            <Unlock size={14} /> {c.reward}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  </motion.div>
-);
+
 
 /* ── Gallery ──────────────────────────── */
 const GalleryScreen = ({ onNavigate, savedOutfits, showToast }: any) => {
@@ -508,12 +440,10 @@ const GalleryScreen = ({ onNavigate, savedOutfits, showToast }: any) => {
 // ==========================================
 export default function DripBuilder() {
   const [screen, setScreen] = useState('home');
-  const [ctx, setCtx] = useState<any>(null);
-  const [inventory, setInventory] = useLocalStorage<string[]>('obvious_inventory', INITIAL_INVENTORY);
   const [savedOutfits, setSavedOutfits] = useLocalStorage<any[]>('obvious_saved_fits', []);
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
 
-  const navigate = (s: string, c: any = null) => { setCtx(c); setScreen(s); };
+  const navigate = (s: string) => { setScreen(s); };
   const showToast = (message: string, type = 'default') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -524,11 +454,9 @@ export default function DripBuilder() {
       <AnimatePresence mode="wait">
         {screen === 'home' && <HomeScreen key="home" onNavigate={navigate} />}
         {screen === 'builder' && (
-          <BuilderScreen key="builder" onNavigate={navigate} context={ctx}
-            inventory={inventory} setInventory={setInventory}
+          <BuilderScreen key="builder" onNavigate={navigate}
             savedOutfits={savedOutfits} setSavedOutfits={setSavedOutfits} showToast={showToast} />
         )}
-        {screen === 'challenges' && <ChallengesScreen key="challenges" onNavigate={navigate} />}
         {screen === 'gallery' && <GalleryScreen key="gallery" onNavigate={navigate} savedOutfits={savedOutfits} showToast={showToast} />}
       </AnimatePresence>
 
