@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Gamepad2, Music, ChevronRight, X } from 'lucide-react';
+import DripBuilder from './DripBuilder';
+
 
 const tabs = [
   { id: 'games', label: 'Games', icon: Gamepad2 },
@@ -21,7 +23,7 @@ const content = {
     { id: 4, title: 'Oviaas Coin Rush', genre: 'Arcade', image: `${import.meta.env.BASE_URL}assets/Oviaas_Coin.png` },
     { id: 5, title: 'Gusheshe Night', genre: 'Racing', image: `${import.meta.env.BASE_URL}assets/gusheshe_2.png` },
     { id: 6, title: 'Cyber Character', genre: 'Action', image: `${import.meta.env.BASE_URL}assets/charecter_2.png` },
-    { id: 7, title: 'Drip Builder', genre: 'Customization', image: `${import.meta.env.BASE_URL}assets/charecter.png`, gamePath: `${import.meta.env.BASE_URL}Drip_Builder/index.html` },
+    { id: 7, title: 'Drip Builder', genre: 'Customization', image: `${import.meta.env.BASE_URL}assets/charecter.png`, component: 'DripBuilder' },
   ],
   music: [
     { id: 1, title: 'Oviaas Vol. 1', artist: 'Various Artists', image: 'https://picsum.photos/seed/music_vol1/500/500' },
@@ -34,9 +36,12 @@ export default function EntertainmentHub() {
   const [activeTab, setActiveTab] = useState('games');
   const [launchingItem, setLaunchingItem] = useState<string | null>(null);
   const [activeIframe, setActiveIframe] = useState<string | null>(null);
+  const [activeComponent, setActiveComponent] = useState<string | null>(null);
 
-  const handleLaunch = (title: string, path?: string) => {
-    if (path) {
+  const handleLaunch = (title: string, path?: string, component?: string) => {
+    if (component) {
+      setActiveComponent(component);
+    } else if (path) {
       setActiveIframe(path);
     } else {
       setLaunchingItem(title);
@@ -90,7 +95,7 @@ export default function EntertainmentHub() {
 
       {/* Frame Overlay for Native Games */}
       <AnimatePresence>
-        {activeIframe && (
+        {(activeIframe || activeComponent) && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -98,18 +103,25 @@ export default function EntertainmentHub() {
             className="fixed inset-0 z-[110] bg-dark-bg/90 backdrop-blur-2xl flex flex-col items-center justify-center p-4 md:p-8"
           >
             <button
-              onClick={() => setActiveIframe(null)}
-              className="absolute top-4 right-4 md:top-8 md:right-8 z-20 w-12 h-12 rounded-full border border-white/20 hover:border-[#b026ff]/60 bg-black/80 flex items-center justify-center transition-colors group"
+              onClick={() => { setActiveIframe(null); setActiveComponent(null); }}
+              className="absolute top-4 right-4 md:top-8 md:right-8 z-[200] w-12 h-12 rounded-full border border-white/20 hover:border-[#b026ff]/60 bg-black/80 flex items-center justify-center transition-colors group"
             >
               <X className="w-6 h-6 text-white group-hover:text-[#b026ff] transition-colors" />
             </button>
-            <div className="w-full max-w-[450px] h-full sm:h-[80vh] sm:max-h-[900px] rounded-[3rem] overflow-hidden glass-panel border border-white/10 relative shadow-2xl shadow-[#00f0ff]/20 flex items-center justify-center">
-              <iframe 
-                src={activeIframe} 
-                className="absolute inset-0 w-full h-full border-none bg-black"
-                title="Soweto Run Game"
-              />
-            </div>
+
+            {activeIframe ? (
+              <div className="w-full max-w-[450px] h-full sm:h-[80vh] sm:max-h-[900px] rounded-[3rem] overflow-hidden glass-panel border border-white/10 relative shadow-2xl shadow-[#00f0ff]/20 flex items-center justify-center">
+                <iframe 
+                  src={activeIframe} 
+                  className="absolute inset-0 w-full h-full border-none bg-black"
+                  title="Oviaas Game"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full sm:h-[90vh] rounded-[2rem] overflow-hidden glass-panel border border-white/10 relative shadow-2xl shadow-[#b026ff]/20 flex flex-col">
+                {activeComponent === 'DripBuilder' && <DripBuilder />}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -201,7 +213,11 @@ export default function EntertainmentHub() {
                 {content.games.map((game) => (
                   <div 
                     key={game.id} 
-                    onClick={() => handleLaunch(game.title, 'gamePath' in game ? game.gamePath : undefined)}
+                    onClick={() => handleLaunch(
+                      game.title, 
+                      'gamePath' in game ? game.gamePath : undefined,
+                      'component' in game ? game.component : undefined
+                    )}
                     className="aspect-square relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 hover:border-[#b026ff]/50 transition-colors"
                   >
                     <img src={game.image} alt={game.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
