@@ -6,15 +6,16 @@ import DripBuilder from './DripBuilder';
 
 const tabs = [
   { id: 'games', label: 'Games', icon: Gamepad2 },
-  { id: 'studios', label: 'Oviaas Studios', icon: Play },
+  { id: 'studios', label: 'Oviaas Studio', icon: Gamepad2 },
   { id: 'music', label: 'Audio', icon: Music },
 ];
 
 const content = {
   studios: [
-    { id: 1, title: 'The Neon Thread', duration: '12:45', image: 'https://picsum.photos/seed/movie_neon/800/450' },
-    { id: 2, title: 'Behind the Seams', duration: '45:20', image: 'https://picsum.photos/seed/movie_seams/800/450' },
-    { id: 3, title: 'Cyberpunk 2077 x Oviaas', duration: '05:15', image: 'https://picsum.photos/seed/movie_cyber/800/450' },
+    { id: 1, title: 'Sports Art-Work', category: 'Portfolio', image: `${import.meta.env.BASE_URL}assets/studios/sports_art.png`, url: 'https://drive.google.com/drive/folders/1-MIYdKpRf8-b7rgwKJxZALKF5RH6tLGO' },
+    { id: 2, title: 'Cover Art-Work', category: 'Portfolio', image: `${import.meta.env.BASE_URL}assets/studios/cover_art.png`, url: 'https://drive.google.com/drive/folders/1-De6eHIHSdkIxxnfs55npzCxSpKXZiue' },
+    { id: 3, title: 'SVO- SESSIONS', category: 'Live Performance', image: `${import.meta.env.BASE_URL}assets/studios/svo_sessions.png`, url: 'https://hearthis.at/don-teepee/' },
+    { id: 4, title: 'Sponono (ft Don TeePee)', category: 'Single', image: `${import.meta.env.BASE_URL}assets/studios/sponono.png`, url: 'https://tr.ee/MTc-rRrseu' },
   ],
   games: [
     { id: 1, title: 'Soweto Run Oviaas', genre: 'Endless Runner', image: `${import.meta.env.BASE_URL}assets/gusheshe.png`, gamePath: `${import.meta.env.BASE_URL}Soweto_Run_Oviaas/index.html` },
@@ -34,11 +35,17 @@ export default function EntertainmentHub() {
   const [activeIframe, setActiveIframe] = useState<string | null>(null);
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
 
-  const handleLaunch = (title: string, path?: string, component?: string) => {
+  const handleLaunch = (title: string, path?: string, component?: string, url?: string) => {
     if (component) {
       setActiveComponent(component);
     } else if (path) {
       setActiveIframe(path);
+    } else if (url) {
+      setLaunchingItem(title);
+      setTimeout(() => {
+        setLaunchingItem(null);
+        window.open(url, '_blank');
+      }, 3000);
     } else {
       setLaunchingItem(title);
       setTimeout(() => {
@@ -176,10 +183,15 @@ export default function EntertainmentHub() {
                 {content.studios.map((item) => (
                   <div 
                     key={item.id} 
-                    onClick={() => handleLaunch(item.title)}
+                    onClick={() => handleLaunch(
+                      item.title, 
+                      undefined, 
+                      undefined, 
+                      'url' in item ? item.url : undefined
+                    )}
                     className="min-w-[300px] md:min-w-[400px] aspect-video relative rounded-2xl overflow-hidden group snap-center cursor-pointer"
                   >
-                    <img src={item.image} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer" />
+                    <img src={item.image} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
                     
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-75 group-hover:scale-100">
@@ -189,7 +201,7 @@ export default function EntertainmentHub() {
                     </div>
 
                     <div className="absolute bottom-0 left-0 p-6 w-full">
-                      <span className="text-xs font-mono text-[#00f0ff] mb-2 block">{item.duration}</span>
+                      <span className="text-xs font-mono text-[#00f0ff] mb-2 block">{item.category}</span>
                       <h3 className="font-display text-xl uppercase tracking-widest text-white">{item.title}</h3>
                     </div>
                   </div>
