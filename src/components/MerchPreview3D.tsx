@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, useGLTF, Float, ContactShadows } from '@react-three/drei';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 
 /* ─────────────────────────────────────────────────────────
@@ -140,12 +140,14 @@ function ModelScene({
   modelPosition,
   cameraPosition,
   cameraFov,
+  isInteracting,
 }: {
   modelPath: string;
   modelScale: number;
   modelPosition: [number, number, number];
   cameraPosition: [number, number, number];
   cameraFov: number;
+  isInteracting: boolean;
 }) {
   return (
     <Canvas
@@ -206,11 +208,12 @@ function ModelScene({
 
       {/* Controls — zoomed out by default, user can zoom in */}
       <OrbitControls
+        enabled={isInteracting}
         enableZoom={true}
         enablePan={false}
         minDistance={3}
         maxDistance={25}
-        autoRotate
+        autoRotate={!isInteracting}
         autoRotateSpeed={1.2}
         maxPolarAngle={Math.PI * 0.85}
         minPolarAngle={Math.PI * 0.15}
@@ -231,6 +234,12 @@ function Model3DCard({
   delay: number;
 }) {
   const { ref, isInView } = useInView('300px');
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  // Auto-lock when leaving viewport
+  useEffect(() => {
+     if (!isInView) setIsInteracting(false);
+  }, [isInView]);
 
   return (
     <motion.div
@@ -260,10 +269,49 @@ function Model3DCard({
             modelPosition={model.position}
             cameraPosition={model.cameraPosition}
             cameraFov={model.cameraFov}
+            isInteracting={isInteracting}
           />
         ) : (
           <LoadingPlaceholder label={model.label} />
         )}
+
+        {/* Mobile Interaction Overlay */}
+        <AnimatePresence>
+          {!isInteracting && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsInteracting(true)}
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/10 backdrop-blur-[2px] md:hidden cursor-pointer group"
+            >
+              <div className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-3 group-hover:bg-white/20 transition-all duration-300 transform group-hover:scale-105">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#b026ff]">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span className="text-white text-xs font-display uppercase tracking-[0.2em] font-bold">Tap To Explore</span>
+              </div>
+            </motion.div>
+          )}
+
+          {isInteracting && (
+             <motion.button 
+               initial={{ opacity: 0, scale: 0.8 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.8 }}
+               onClick={() => setIsInteracting(false)}
+               className="absolute top-4 left-4 z-20 px-4 py-2 bg-dark-surface/80 backdrop-blur-md border border-[#b026ff]/30 rounded-lg flex items-center gap-2 group md:hidden transition-all duration-300 hover:border-[#b026ff]"
+             >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#00f0ff]">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78z"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="22" y1="22" x2="16" y2="16"></line>
+                </svg>
+                <span className="text-white/80 text-[10px] uppercase font-bold tracking-widest">Lock View</span>
+             </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Interaction hint */}
         <div className="absolute top-4 right-4 flex items-center gap-2 text-white/40 text-xs font-display uppercase tracking-widest pointer-events-none">
