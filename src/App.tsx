@@ -43,6 +43,7 @@ export default function App() {
   const [isEntered, setIsEntered] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('showroom');
+  const [isPerformanceMode, setIsPerformanceMode] = useState(false);
 
   const showroomRef = useRef<HTMLElement>(null);
   const collectionsRef = useRef<HTMLElement>(null);
@@ -125,7 +126,7 @@ export default function App() {
 
                 <Suspense fallback={<SectionPlaceholder title="3D Preview" />}>
                   <ViewportSection>
-                    <MerchPreview3D />
+                    {!isPerformanceMode && <MerchPreview3D />}
                   </ViewportSection>
                 </Suspense>
                 
@@ -146,7 +147,7 @@ export default function App() {
                 <section ref={entertainmentRef} id="entertainment">
                   <Suspense fallback={<SectionPlaceholder title="Entertainment" />}>
                     <ViewportSection>
-                      <EntertainmentHub />
+                      <EntertainmentHub onTogglePerformance={setIsPerformanceMode} />
                     </ViewportSection>
                   </Suspense>
                 </section>

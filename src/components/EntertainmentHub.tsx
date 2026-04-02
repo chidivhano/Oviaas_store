@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Gamepad2, Music, ChevronRight, X } from 'lucide-react';
 import DripBuilder from './DripBuilder';
@@ -29,11 +29,20 @@ const content = {
   ],
 };
 
-export default function EntertainmentHub() {
+interface EntertainmentHubProps {
+  onTogglePerformance?: (isActive: boolean) => void;
+}
+
+export default function EntertainmentHub({ onTogglePerformance }: EntertainmentHubProps) {
   const [activeTab, setActiveTab] = useState('games');
   const [launchingItem, setLaunchingItem] = useState<string | null>(null);
   const [activeIframe, setActiveIframe] = useState<string | null>(null);
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+
+  // Trigger performance mode when a game or heavy component is active
+  useEffect(() => {
+    onTogglePerformance?.(!!(activeIframe || activeComponent));
+  }, [activeIframe, activeComponent, onTogglePerformance]);
 
   const handleLaunch = (title: string, path?: string, component?: string, url?: string) => {
     if (component) {
@@ -42,15 +51,16 @@ export default function EntertainmentHub() {
       setActiveIframe(path);
     } else if (url) {
       setLaunchingItem(title);
+      // Reduce delay significantly to feel snappy (User requested speed)
       setTimeout(() => {
         setLaunchingItem(null);
         window.open(url, '_blank');
-      }, 3000);
+      }, 800);
     } else {
       setLaunchingItem(title);
       setTimeout(() => {
         setLaunchingItem(null);
-      }, 3000);
+      }, 500);
     }
   };
 
@@ -178,7 +188,7 @@ export default function EntertainmentHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
-                className="flex gap-6 overflow-x-auto pb-8 no-scrollbar snap-x snap-mandatory"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 pb-8"
               >
                 {content.studios.map((item) => (
                   <div 
@@ -189,7 +199,7 @@ export default function EntertainmentHub() {
                       undefined, 
                       'url' in item ? item.url : undefined
                     )}
-                    className="min-w-[300px] md:min-w-[400px] aspect-video relative rounded-2xl overflow-hidden group snap-center cursor-pointer"
+                    className="w-full aspect-video relative rounded-2xl overflow-hidden group cursor-pointer border border-white/5 hover:border-[#00f0ff]/30 transition-colors duration-300"
                   >
                     <img src={item.image} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -221,24 +231,44 @@ export default function EntertainmentHub() {
                 {content.games.map((game) => (
                   <div 
                     key={game.id} 
-                    onClick={() => handleLaunch(
-                      game.title, 
-                      'gamePath' in game ? game.gamePath : undefined,
-                      'component' in game ? game.component : undefined
-                    )}
-                    className="aspect-square relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 hover:border-[#b026ff]/50 transition-colors"
+                    className="flex flex-col bg-dark-surface/40 rounded-[2rem] overflow-hidden border border-white/5 hover:border-[#b026ff]/30 transition-all duration-500 group"
                   >
-                    <img src={game.image} alt={game.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors" />
-                    
-                    <div className="absolute inset-0 p-8 flex flex-col items-center justify-center text-center">
-                      <Gamepad2 className="w-12 h-12 text-white/50 group-hover:text-[#b026ff] transition-colors mb-4 transform group-hover:-translate-y-2 duration-300" />
-                      <h3 className="font-anton text-3xl uppercase tracking-tighter text-white mb-2">{game.title}</h3>
-                      <span className="text-xs font-display tracking-widest uppercase text-gray-400">{game.genre}</span>
+                    {/* Game Placeholder/Thumbnail */}
+                    <div className="aspect-[16/10] relative overflow-hidden">
+                      <img 
+                        src={game.image} 
+                        alt={game.title} 
+                        loading="lazy" 
+                        decoding="async" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        referrerPolicy="no-referrer" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       
-                      <div className="mt-6 px-6 py-2 border border-white/30 rounded-full font-display text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-white hover:text-black">
-                        Play Now
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                         <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                           <Play className="w-6 h-6 text-white ml-0.5" />
+                         </div>
                       </div>
+                    </div>
+
+                    {/* Info & Action */}
+                    <div className="p-6 flex flex-col gap-4">
+                      <div>
+                        <h3 className="font-anton text-2xl uppercase tracking-tight text-white mb-1 group-hover:text-[#b026ff] transition-colors">{game.title}</h3>
+                        <span className="text-[10px] font-display tracking-[0.2em] uppercase text-gray-500">{game.genre}</span>
+                      </div>
+
+                      <button 
+                         onClick={() => handleLaunch(
+                          game.title, 
+                          'gamePath' in game ? game.gamePath : undefined,
+                          'component' in game ? game.component : undefined
+                        )}
+                        className="w-full py-3 bg-white text-black rounded-xl font-display text-xs uppercase tracking-[0.2em] font-bold transition-all duration-300 hover:bg-[#b026ff] hover:text-white"
+                      >
+                        Play Game
+                      </button>
                     </div>
                   </div>
                 ))}
