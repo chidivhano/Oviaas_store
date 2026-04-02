@@ -7,25 +7,18 @@ import DripBuilder from './DripBuilder';
 const tabs = [
   { id: 'games', label: 'Games', icon: Gamepad2 },
   { id: 'studios', label: 'Oviaas Studio', icon: Gamepad2 },
-  { id: 'music', label: 'Audio', icon: Music },
 ];
 
 const content = {
   studios: [
-    { id: 1, title: 'Sports Art-Work', category: 'Portfolio', image: `${import.meta.env.BASE_URL}assets/studios/sports_art.png`, url: 'https://drive.google.com/drive/folders/1-MIYdKpRf8-b7rgwKJxZALKF5RH6tLGO' },
-    { id: 2, title: 'Cover Art-Work', category: 'Portfolio', image: `${import.meta.env.BASE_URL}assets/studios/cover_art.png`, url: 'https://drive.google.com/drive/folders/1-De6eHIHSdkIxxnfs55npzCxSpKXZiue' },
-    { id: 3, title: 'SVO- SESSIONS', category: 'Live Performance', image: `${import.meta.env.BASE_URL}assets/studios/svo_sessions.png`, url: 'https://hearthis.at/don-teepee/' },
-    { id: 4, title: 'Sponono (ft Don TeePee)', category: 'Single', image: `${import.meta.env.BASE_URL}assets/studios/sponono.png`, url: 'https://tr.ee/MTc-rRrseu' },
+    { id: 1, title: 'Sports Art-Work', category: 'Portfolio', image: `${import.meta.env.BASE_URL}assets/entertainment_hub/sports_artwork_cover.png`, url: 'https://drive.google.com/drive/folders/1-MIYdKpRf8-b7rgwKJxZALKF5RH6tLGO' },
+    { id: 2, title: 'Cover Art-Work', category: 'Portfolio', image: `${import.meta.env.BASE_URL}assets/entertainment_hub/cover_artwork_cover.png`, url: 'https://drive.google.com/drive/folders/1-De6eHIHSdkIxxnfs55npzCxSpKXZiue' },
+    { id: 3, title: 'SVO- SESSIONS', category: 'Live Performance', image: `${import.meta.env.BASE_URL}assets/entertainment_hub/svo_sessions_cover.png`, url: 'https://hearthis.at/don-teepee/' },
   ],
   games: [
-    { id: 1, title: 'Soweto Run Oviaas', genre: 'Endless Runner', image: `${import.meta.env.BASE_URL}assets/gusheshe.png`, gamePath: `${import.meta.env.BASE_URL}Soweto_Run_Oviaas/index.html` },
-    { id: 2, title: 'Kasi Hoops', genre: 'Arcade Basketball', image: `${import.meta.env.BASE_URL}assets/Kasi_Hoops/kasi_hoop_charecter_1.png`, gamePath: `${import.meta.env.BASE_URL}Kasi_Hoops/index.html` },
-    { id: 3, title: 'Drip Builder', genre: 'Customization', image: `${import.meta.env.BASE_URL}assets/charecter.png`, component: 'DripBuilder' },
-  ],
-  music: [
-    { id: 1, title: 'Oviaas Vol. 1', artist: 'Various Artists', image: 'https://picsum.photos/seed/music_vol1/500/500' },
-    { id: 2, title: 'Cyber Beats', artist: 'DJ Neon', image: 'https://picsum.photos/seed/music_cyber/500/500' },
-    { id: 3, title: 'Ambient City', artist: 'The Synth', image: 'https://picsum.photos/seed/music_ambient/500/500' },
+    { id: 1, title: 'Soweto Run Oviaas', genre: 'Endless Runner', image: `${import.meta.env.BASE_URL}assets/entertainment_hub/soweto_run_cover.png`, gamePath: `${import.meta.env.BASE_URL}Soweto_Run_Oviaas/index.html` },
+    { id: 2, title: 'Kasi Hoops', genre: 'Arcade Basketball', image: `${import.meta.env.BASE_URL}assets/entertainment_hub/kasi_hoops_cover.png`, gamePath: `${import.meta.env.BASE_URL}Kasi_Hoops/index.html` },
+    { id: 3, title: 'Drip Builder', genre: 'Customization', image: `${import.meta.env.BASE_URL}assets/entertainment_hub/drip_builder_cover.png`, component: 'DripBuilder' },
   ],
 };
 
@@ -270,37 +263,6 @@ export default function EntertainmentHub({ onTogglePerformance }: EntertainmentH
                         Play Game
                       </button>
                     </div>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-
-            {activeTab === 'music' && (
-              <motion.div
-                key="music"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-8"
-              >
-                {content.music.map((album) => (
-                  <div 
-                    key={album.id} 
-                    onClick={() => handleLaunch(album.title)}
-                    className="flex flex-col items-center group cursor-pointer"
-                  >
-                    <div className="w-full aspect-square relative rounded-full overflow-hidden mb-6 border-4 border-dark-surface group-hover:border-[#00f0ff]/50 transition-colors duration-500">
-                      <img src={album.image} alt={album.title} loading="lazy" decoding="async" className="w-full h-full object-cover animate-[spin_20s_linear_infinite] group-hover:animate-[spin_10s_linear_infinite]" referrerPolicy="no-referrer" />
-                      <div className="absolute inset-0 bg-black/20" />
-                      {/* Vinyl Center */}
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/4 h-1/4 bg-dark-bg rounded-full border-4 border-dark-surface flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full" />
-                      </div>
-                    </div>
-                    
-                    <h3 className="font-display text-xl uppercase tracking-widest text-white text-center mb-1">{album.title}</h3>
-                    <span className="text-xs font-sans text-gray-500 tracking-widest uppercase text-center">{album.artist}</span>
                   </div>
                 ))}
               </motion.div>
