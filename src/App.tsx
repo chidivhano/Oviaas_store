@@ -11,6 +11,34 @@ const EntertainmentHub = lazy(() => import('./components/EntertainmentHub'));
 const BrandStory = lazy(() => import('./components/BrandStory'));
 const Community = lazy(() => import('./components/Community'));
 
+/* ─────────────────────────────────────────────────────────
+   ViewportSection — Mounts children only when close to viewport
+   ───────────────────────────────────────────────────────── */
+function ViewportSection({ children, rootMargin = '800px' }: { children: React.ReactNode; rootMargin?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [hasBeenSeen, setHasBeenSeen] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasBeenSeen(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  return <div ref={ref} className="min-h-[20vh] w-full">{hasBeenSeen ? children : null}</div>;
+}
+
 export default function App() {
   const [isEntered, setIsEntered] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -89,27 +117,47 @@ export default function App() {
             />
             
             <main>
-              <Suspense fallback={<div className="w-full h-96 flex items-center justify-center text-white/50 text-xs tracking-widest uppercase animate-pulse">Loading Environment...</div>}>
                 <section ref={showroomRef} id="showroom">
-                  <Showroom />
+                  <Suspense fallback={<SectionPlaceholder title="Showroom" />}>
+                    <Showroom />
+                  </Suspense>
                 </section>
 
-                <MerchPreview3D />
+                <Suspense fallback={<SectionPlaceholder title="3D Preview" />}>
+                  <ViewportSection>
+                    <MerchPreview3D />
+                  </ViewportSection>
+                </Suspense>
                 
-                <BrandStory />
+                <Suspense fallback={<SectionPlaceholder title="Brand Story" />}>
+                  <ViewportSection>
+                    <BrandStory />
+                  </ViewportSection>
+                </Suspense>
                 
                 <section ref={collectionsRef} id="collections">
-                  <Collections />
+                  <Suspense fallback={<SectionPlaceholder title="Collections" />}>
+                    <ViewportSection>
+                      <Collections />
+                    </ViewportSection>
+                  </Suspense>
                 </section>
                 
                 <section ref={entertainmentRef} id="entertainment">
-                  <EntertainmentHub />
+                  <Suspense fallback={<SectionPlaceholder title="Entertainment" />}>
+                    <ViewportSection>
+                      <EntertainmentHub />
+                    </ViewportSection>
+                  </Suspense>
                 </section>
                 
                 <section ref={communityRef} id="community">
-                  <Community />
+                  <Suspense fallback={<SectionPlaceholder title="Community" />}>
+                    <ViewportSection>
+                      <Community />
+                    </ViewportSection>
+                  </Suspense>
                 </section>
-              </Suspense>
             </main>
 
             {/* Footer */}
@@ -141,6 +189,19 @@ export default function App() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SectionPlaceholder({ title }: { title: string }) {
+  return (
+    <div className="w-full h-[50vh] flex items-center justify-center bg-dark-bg/50 border-y border-white/5">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-full border-2 border-[#b026ff]/10 border-t-[#b026ff] animate-spin" />
+        <span className="text-white/20 text-[10px] uppercase tracking-[0.3em] font-display">
+          Initializing {title}...
+        </span>
+      </div>
     </div>
   );
 }
