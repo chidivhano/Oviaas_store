@@ -1,52 +1,68 @@
-import { useRef, useState, useEffect, Suspense } from 'react';
+import { useRef, useState, useEffect, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, useGLTF, useAnimations, Float, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, useGLTF, Float, ContactShadows } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
 
 /* ─────────────────────────────────────────────────────────
-   Walking T-Shirt GLB Model
+   Model Paths
    ───────────────────────────────────────────────────────── */
-const MODEL_PATH = `${import.meta.env.BASE_URL}assets/Walking_Tshirt_Preview.glb`;
+const HOODIE_PATH = `${import.meta.env.BASE_URL}assets/ovs_hoodie_3d.glb`;
+const TSHIRT_PATH = `${import.meta.env.BASE_URL}assets/oviaas_3d_tshirt.glb`;
 
-function WalkingTShirt({ isPlaying }: { isPlaying: boolean }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const { scene, animations } = useGLTF(MODEL_PATH);
-  const { actions, names } = useAnimations(animations, groupRef);
+/* ─────────────────────────────────────────────────────────
+   Intersection Observer Hook — only render Canvas when visible
+   ───────────────────────────────────────────────────────── */
+function useInView(rootMargin = '200px') {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
 
-  // Play the first animation (walking) on mount
   useEffect(() => {
-    if (names.length > 0 && actions[names[0]]) {
-      const action = actions[names[0]]!;
-      action.reset().fadeIn(0.5).play();
-    }
-    return () => {
-      names.forEach((name) => {
-        actions[name]?.fadeOut(0.5);
-      });
-    };
-  }, [actions, names]);
+    const el = ref.current;
+    if (!el) return;
 
-  // Pause/resume based on isPlaying
-  useEffect(() => {
-    names.forEach((name) => {
-      const action = actions[name];
-      if (action) {
-        action.paused = !isPlaying;
-      }
-    });
-  }, [isPlaying, actions, names]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect(); // once visible, stay visible
+        }
+      },
+      { rootMargin }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  return { ref, isInView };
+}
+
+/* ─────────────────────────────────────────────────────────
+   Generic GLB Model Component — clones scene to avoid
+   shared scene-graph issues between two canvases
+   ───────────────────────────────────────────────────────── */
+function GLBModel({
+  path,
+  scale = 1,
+  position = [0, 0, 0] as [number, number, number],
+}: {
+  path: string;
+  scale?: number;
+  position?: [number, number, number];
+}) {
+  const { scene } = useGLTF(path);
+  // Clone so each canvas owns its own scene graph
+  const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
   return (
-    <group ref={groupRef}>
-      <primitive
-        object={scene}
-        scale={2.5}
-        position={[0, -2, 0]}
-        castShadow
-        receiveShadow
-      />
-    </group>
+    <primitive
+      object={clonedScene}
+      scale={scale}
+      position={position}
+      castShadow
+      receiveShadow
+    />
   );
 }
 
@@ -68,7 +84,7 @@ function Loader() {
 /* ── Floating particles around the model ── */
 function Particles() {
   const groupRef = useRef<THREE.Group>(null);
-  const count = 40;
+  const count = 20; // reduced for perf
   const positions = useRef(
     Array.from({ length: count }, () => ({
       x: (Math.random() - 0.5) * 8,
@@ -87,7 +103,7 @@ function Particles() {
       {positions.current.map((p, i) => (
         <Float key={i} speed={p.speed} floatIntensity={0.4} rotationIntensity={0}>
           <mesh position={[p.x, p.y, p.z]}>
-            <sphereGeometry args={[0.015 + Math.random() * 0.025, 8, 8]} />
+            <sphereGeometry args={[0.015 + Math.random() * 0.025, 6, 6]} />
             <meshStandardMaterial
               color={i % 3 === 0 ? '#b026ff' : i % 3 === 1 ? '#00f0ff' : '#ffffff'}
               emissive={i % 3 === 0 ? '#b026ff' : i % 3 === 1 ? '#00f0ff' : '#ffffff'}
@@ -100,27 +116,62 @@ function Particles() {
   );
 }
 
-/* ── The 3D Scene ── */
-function Scene({ isPlaying }: { isPlaying: boolean }) {
+/* ── Loading placeholder shown before Canvas mounts ── */
+function LoadingPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] rounded-3xl">
+      <div className="relative w-16 h-16 mb-4">
+        <div className="absolute inset-0 rounded-full border-2 border-[#b026ff]/20" />
+        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#b026ff] animate-spin" />
+      </div>
+      <span className="text-white/40 text-xs font-display uppercase tracking-widest">
+        Loading {label}...
+      </span>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+   Individual 3D Viewer Scene
+   ───────────────────────────────────────────────────────── */
+function ModelScene({
+  modelPath,
+  modelScale,
+  modelPosition,
+  cameraPosition,
+  cameraFov,
+}: {
+  modelPath: string;
+  modelScale: number;
+  modelPosition: [number, number, number];
+  cameraPosition: [number, number, number];
+  cameraFov: number;
+}) {
   return (
     <Canvas
-      camera={{ position: [0, 1, 10], fov: 35 }}
+      camera={{ position: cameraPosition, fov: cameraFov }}
       style={{ width: '100%', height: '100%' }}
-      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
+      dpr={[1, 1.5]} // cap device pixel ratio for performance
+      gl={{
+        antialias: true,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.2,
+        powerPreference: 'high-performance',
+      }}
       shadows
     >
       <color attach="background" args={['#050505']} />
-      <fog attach="fog" args={['#050505', 10, 22]} />
+      <fog attach="fog" args={['#050505', 18, 35]} />
 
       {/* Lighting */}
-      <ambientLight intensity={0.4} />
+      <ambientLight intensity={0.5} />
       <directionalLight
         position={[5, 8, 5]}
         intensity={1.5}
         color="#ffffff"
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
       />
       <pointLight position={[-4, 4, 3]} intensity={0.8} color="#b026ff" />
       <pointLight position={[4, 3, -3]} intensity={0.6} color="#00f0ff" />
@@ -130,17 +181,16 @@ function Scene({ isPlaying }: { isPlaying: boolean }) {
         angle={0.35}
         penumbra={0.8}
         color="#ffffff"
-        castShadow
       />
 
       {/* Model */}
       <Suspense fallback={<Loader />}>
-        <WalkingTShirt isPlaying={isPlaying} />
+        <GLBModel path={modelPath} scale={modelScale} position={modelPosition} />
       </Suspense>
 
       {/* Ground shadow */}
       <ContactShadows
-        position={[0, -2, 0]}
+        position={[0, modelPosition[1], 0]}
         opacity={0.4}
         scale={10}
         blur={2.5}
@@ -154,27 +204,131 @@ function Scene({ isPlaying }: { isPlaying: boolean }) {
       {/* Environment */}
       <Environment preset="city" />
 
-      {/* Controls — user can drag/zoom */}
+      {/* Controls — zoomed out by default, user can zoom in */}
       <OrbitControls
         enableZoom={true}
         enablePan={false}
-        minDistance={5}
-        maxDistance={16}
+        minDistance={3}
+        maxDistance={25}
         autoRotate
-        autoRotateSpeed={1.5}
-        maxPolarAngle={Math.PI * 0.8}
-        minPolarAngle={Math.PI * 0.2}
+        autoRotateSpeed={1.2}
+        maxPolarAngle={Math.PI * 0.85}
+        minPolarAngle={Math.PI * 0.15}
       />
     </Canvas>
   );
 }
 
+/* ─────────────────────────────────────────────────────────
+   Lazy-loaded 3D Card — only renders Canvas when scrolled
+   into viewport (with 200px pre-fetch margin)
+   ───────────────────────────────────────────────────────── */
+function Model3DCard({
+  model,
+  delay,
+}: {
+  model: (typeof MODELS)[number];
+  delay: number;
+}) {
+  const { ref, isInView } = useInView('300px');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay }}
+      className="relative w-full mx-auto flex flex-col"
+    >
+      {/* Model Label */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-2xl">{model.icon}</span>
+        <h3 className="font-anton text-2xl md:text-3xl uppercase tracking-tight text-white">
+          {model.label}
+        </h3>
+      </div>
+
+      {/* 3D Viewer */}
+      <div
+        ref={ref}
+        className="relative aspect-[3/4] sm:aspect-[4/5] md:aspect-[4/3] rounded-3xl overflow-hidden glass-panel border border-white/10"
+      >
+        {isInView ? (
+          <ModelScene
+            modelPath={model.path}
+            modelScale={model.scale}
+            modelPosition={model.position}
+            cameraPosition={model.cameraPosition}
+            cameraFov={model.cameraFov}
+          />
+        ) : (
+          <LoadingPlaceholder label={model.label} />
+        )}
+
+        {/* Interaction hint */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 text-white/40 text-xs font-display uppercase tracking-widest pointer-events-none">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14 4.1L12 6" />
+            <path d="M5.1 8L2.8 6.4" />
+            <path d="M18.9 8l2.3-1.6" />
+            <path d="M12 6v4" />
+            <circle cx="12" cy="14" r="6" />
+            <path d="M12 14l-2.5 2.5" />
+            <path d="M12 14l2.5 2.5" />
+          </svg>
+          Drag &amp; Zoom
+        </div>
+      </div>
+
+      {/* Description */}
+      <p className="text-gray-500 text-sm mt-4 leading-relaxed text-center">
+        {model.description}
+      </p>
+    </motion.div>
+  );
+}
+
+/* ── Model configuration ── */
+const MODELS = [
+  {
+    id: 'hoodie',
+    label: 'OVS Hoodie 3D',
+    description:
+      'The Oviaas hoodie brought to life — rotate, zoom in and explore every stitch.',
+    path: HOODIE_PATH,
+    scale: 2.2,
+    position: [0, -2, 0] as [number, number, number],
+    cameraPosition: [0, 1.5, 14] as [number, number, number],
+    cameraFov: 40,
+    icon: '🧥',
+  },
+  {
+    id: 'tshirt',
+    label: 'Oviaas 3D Shirt',
+    description:
+      "See the iconic Oviaas tee in full 3D — drag to spin it around and inspect the fit.",
+    path: TSHIRT_PATH,
+    scale: 2.2,
+    position: [0, -2, 0] as [number, number, number],
+    cameraPosition: [0, 1.5, 14] as [number, number, number],
+    cameraFov: 40,
+    icon: '👕',
+  },
+] as const;
+
 /* ══════════════════════════════════════════
-   MAIN EXPORT
+   MAIN EXPORT — Dual 3D Model Previews
    ══════════════════════════════════════════ */
 export default function MerchPreview3D() {
-  const [isPlaying, setIsPlaying] = useState(true);
-
   return (
     <section className="w-full min-h-screen bg-dark-bg relative overflow-hidden py-24">
       {/* Background glow */}
@@ -200,95 +354,67 @@ export default function MerchPreview3D() {
               <span className="neon-text-blue">Drip</span>
             </h2>
             <p className="font-sans text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Watch our merch come alive. Drag to rotate, scroll to zoom —
-              interact with the walking t-shirt preview and see the fit in motion.
-              <span className="text-white/70 font-medium"> This is streetwear you can feel through the screen.</span>
+              Explore our merch in full 3D. Drag to rotate, scroll to zoom in —
+              see every angle and detail before you cop.
+              <span className="text-white/70 font-medium">
+                {' '}
+                This is streetwear you can feel through the screen.
+              </span>
             </p>
           </motion.div>
         </div>
 
-        {/* 3D Viewer */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative w-full mx-auto"
-        >
-          <div className="relative aspect-[3/4] sm:aspect-[3/4] md:aspect-[4/3] lg:aspect-[16/10] rounded-3xl overflow-hidden glass-panel border border-white/10">
-            <Scene isPlaying={isPlaying} />
+        {/* Dual 3D Viewers */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {MODELS.map((model, idx) => (
+            <Model3DCard key={model.id} model={model} delay={0.15 * idx} />
+          ))}
+        </div>
 
-            {/* Play/Pause button */}
-            <button
-              onClick={() => setIsPlaying((p) => !p)}
-              className="absolute bottom-6 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-white/80 hover:text-white hover:border-[#b026ff]/50 transition-all duration-300 text-xs font-display uppercase tracking-widest z-20"
+        {/* Feature cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-16">
+          {[
+            {
+              icon: '🔍',
+              title: 'Zoom In Close',
+              description:
+                'Scroll to zoom in and inspect every detail — stitching, prints, and textures up close',
+            },
+            {
+              icon: '🔄',
+              title: '360° Interaction',
+              description:
+                'Drag to orbit around the model and explore every angle of the fit',
+            },
+            {
+              icon: '✨',
+              title: 'True-to-Life 3D',
+              description:
+                "Real 3D mockups of our merch — see exactly what you're getting before you buy",
+            },
+          ].map((card, i) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
+              className="glass-panel p-5 text-center group hover:border-[#b026ff]/30 transition-colors duration-300"
             >
-              {isPlaying ? (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-                  Pause
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-                  Play
-                </>
-              )}
-            </button>
-
-            {/* Interaction hint */}
-            <div className="absolute top-6 right-6 flex items-center gap-2 text-white/40 text-xs font-display uppercase tracking-widest pointer-events-none">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 4.1L12 6" /><path d="M5.1 8L2.8 6.4" /><path d="M18.9 8l2.3-1.6" />
-                <path d="M12 6v4" /><circle cx="12" cy="14" r="6" />
-                <path d="M12 14l-2.5 2.5" /><path d="M12 14l2.5 2.5" />
-              </svg>
-              Drag to Rotate
-            </div>
-          </div>
-
-          {/* Feature cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-            {[
-              {
-                icon: '👕',
-                title: 'Walking Preview',
-                description: 'See the t-shirt in motion — watch how the fabric moves and flows as it walks',
-              },
-              {
-                icon: '🔄',
-                title: '360° Interaction',
-                description: 'Drag to orbit around the model and explore every angle, zoom in to inspect details',
-              },
-              {
-                icon: '⏯️',
-                title: 'Play & Pause',
-                description: 'Control the walking animation — pause to inspect a frame, play to see the flow',
-              },
-            ].map((card, i) => (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
-                className="glass-panel p-5 text-center group hover:border-[#b026ff]/30 transition-colors duration-300"
-              >
-                <span className="text-2xl mb-3 block">{card.icon}</span>
-                <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white mb-2">
-                  {card.title}
-                </h3>
-                <p className="text-gray-500 text-xs leading-relaxed">
-                  {card.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+              <span className="text-2xl mb-3 block">{card.icon}</span>
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white mb-2">
+                {card.title}
+              </h3>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                {card.description}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-// Preload the model
-useGLTF.preload(MODEL_PATH);
+// Preload the smaller model eagerly; the larger t-shirt loads on demand
+useGLTF.preload(HOODIE_PATH);
