@@ -31,30 +31,32 @@ export default function EntertainmentHub({ onTogglePerformance }: EntertainmentH
   const [launchingItem, setLaunchingItem] = useState<string | null>(null);
   const [activeIframe, setActiveIframe] = useState<string | null>(null);
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [isIframeLoading, setIsIframeLoading] = useState(false);
+  const [pendingLaunchId, setPendingLaunchId] = useState<number | null>(null);
 
   // Trigger performance mode when a game or heavy component is active
   useEffect(() => {
     onTogglePerformance?.(!!(activeIframe || activeComponent));
   }, [activeIframe, activeComponent, onTogglePerformance]);
 
-  const handleLaunch = (title: string, path?: string, component?: string, url?: string) => {
-    if (component) {
-      setActiveComponent(component);
-    } else if (path) {
-      setActiveIframe(path);
-    } else if (url) {
-      setLaunchingItem(title);
-      // Reduce delay significantly to feel snappy (User requested speed)
-      setTimeout(() => {
-        setLaunchingItem(null);
+  const handleLaunch = (title: string, path?: string, component?: string, url?: string, id?: number) => {
+    setLaunchingItem(title);
+    if (id !== undefined) setPendingLaunchId(id);
+    
+    // Immediate acknowledgement with a slight delay for better transition flow
+    setTimeout(() => {
+      setLaunchingItem(null);
+      setPendingLaunchId(null);
+      
+      if (component) {
+        setActiveComponent(component);
+      } else if (path) {
+        setIsIframeLoading(true);
+        setActiveIframe(path);
+      } else if (url) {
         window.open(url, '_blank');
-      }, 800);
-    } else {
-      setLaunchingItem(title);
-      setTimeout(() => {
-        setLaunchingItem(null);
-      }, 500);
-    }
+      }
+    }, 600);
   };
 
   return (
@@ -117,8 +119,18 @@ export default function EntertainmentHub({ onTogglePerformance }: EntertainmentH
 
             {activeIframe ? (
               <div className="w-full max-w-[450px] h-full sm:h-[80vh] sm:max-h-[900px] rounded-[3rem] overflow-hidden glass-panel border border-white/10 relative shadow-2xl shadow-[#00f0ff]/20 flex items-center justify-center">
+                {isIframeLoading && (
+                  <div className="absolute inset-0 z-10 bg-dark-bg flex flex-col items-center justify-center gap-6">
+                    <div className="relative w-24 h-24">
+                       <div className="absolute inset-0 rounded-full border-4 border-[#00f0ff]/10 border-t-[#00f0ff] animate-spin" />
+                       <div className="absolute inset-4 rounded-full border-4 border-[#b026ff]/10 border-b-[#b026ff] animate-[spin_1.5s_linear_infinite_reverse]" />
+                    </div>
+                    <span className="text-[#00f0ff] font-display text-xs uppercase tracking-[0.3em] animate-pulse">Initializing Game Engine...</span>
+                  </div>
+                )}
                 <iframe 
                   src={activeIframe} 
+                  onLoad={() => setIsIframeLoading(false)}
                   className="absolute inset-0 w-full h-full border-none bg-black"
                   title="Oviaas Game"
                 />
@@ -256,11 +268,18 @@ export default function EntertainmentHub({ onTogglePerformance }: EntertainmentH
                          onClick={() => handleLaunch(
                           game.title, 
                           'gamePath' in game ? game.gamePath : undefined,
-                          'component' in game ? game.component : undefined
+                          'component' in game ? game.component : undefined,
+                          undefined,
+                          game.id
                         )}
-                        className="w-full py-3 bg-white text-black rounded-xl font-display text-xs uppercase tracking-[0.2em] font-bold transition-all duration-300 hover:bg-[#b026ff] hover:text-white"
+                        disabled={pendingLaunchId === game.id}
+                        className={`w-full py-3 rounded-xl font-display text-xs uppercase tracking-[0.2em] font-bold transition-all duration-300 ${
+                          pendingLaunchId === game.id 
+                          ? 'bg-white/20 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white text-black hover:bg-[#b026ff] hover:text-white transform hover:scale-[1.02]'
+                        }`}
                       >
-                        Play Game
+                        {pendingLaunchId === game.id ? 'Launching...' : 'Play Game'}
                       </button>
                     </div>
                   </div>
