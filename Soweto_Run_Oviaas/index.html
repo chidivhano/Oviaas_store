@@ -273,13 +273,13 @@
                 this.player = this.physics.add.sprite(this.lanes[this.currentLane], this.height - 120, currentSkin);
                 this.player.setDepth(10);
                 
-                // Scale player to be significantly larger and clearer, showcasing brand apparel
-                // We've jumped to 200px to avoid blurriness and capture maximal texture detail
-                this.player.displayWidth = 200; 
+                // Scale player to better fit the lane grid (User request: make smaller)
+                // We reduce from 200px to 140px for comfortable lane navigation
+                this.player.displayWidth = 140; 
                 this.player.scaleY = this.player.scaleX; 
                 
-                // Tighten physics body to ensure fair gameplay with the larger character
-                this.player.body.setSize(this.player.width * 0.3, this.player.height * 0.6);
+                // Tighten physics body for precise movement between obstacles
+                this.player.body.setSize(this.player.width * 0.35, this.player.height * 0.65);
 
                 // If animations are needed for the image, they would be defined here
                 // For now, we use a static image
